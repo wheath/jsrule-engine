@@ -9,4 +9,6 @@ class Query {
     this.args.push(arg);
   }
 
+
 }
+Types.registerType('Query', Query);

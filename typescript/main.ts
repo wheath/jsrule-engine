@@ -28,6 +28,9 @@ human_fact.addAtom(a1);
 re.addFact(human_fact);
 re.addRule(mortal_rule);
 
-var query1 = new Query('human');
-query1.addArg(a1);
+var query1 = new Query('mortal');
+var a2 = new Atom('aristotle');
+//var a2 = new Atom('socrates');
+query1.addArg(a2);
 var query_result = re.query(query1);
+console.log("_dbg query_result: " + query_result + "\n");

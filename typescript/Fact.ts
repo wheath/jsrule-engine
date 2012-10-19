@@ -11,3 +11,5 @@ class Fact {
   }
 
 }
+
+Types.registerType('Fact', Fact);

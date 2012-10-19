@@ -1,3 +1,97 @@
+class Types {
+  static types:any[] = [];
+  static registerType(clsName: string, classDcl: any) {
+    Types.types[clsName] = classDcl;
+  }  
+
+}
+class Atom {
+  name: string;
+  constructor(name: string) {
+    this.name = name;
+  }
+
+}
+
+Types.registerType('Atom', Atom);
+class Fact {
+  private name: string;
+  private atoms: Atom[] = [];
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  public addAtom(atom: Atom) {
+    this.atoms.push(atom);
+  }
+
+}
+
+Types.registerType('Fact', Fact);
+class Query {
+  name: string;
+  args:any[] = [];
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  addArg(arg: any) {
+    this.args.push(arg);
+  }
+
+
+}
+Types.registerType('Query', Query);
+class Term {
+  public name: string;
+  public grounded: any;
+
+  constructor(name: string) {
+    this.name = name;
+    this.grounded = this;
+  }
+
+  public isGrounded():bool {
+    if(this.grounded == this) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  public setVal(val: any):void {
+    if(!this.isGrounded()) {
+      console.log("_dbg about to set Term with name: " + this.name + ' to val: ' + val + "\n");
+      this.grounded = val;
+    } else {
+      throw new TypeError( "Term is grounded cannot assign");
+    }
+  }
+
+}
+
+Types.registerType('Term', Term);
+class Rule {
+  public name: string;
+  public args: any[] = [];
+  public rules: Rule[] = [];
+  
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  addArg(arg: any) {
+    this.args.push(arg);
+  }
+
+  addRule(rule: Rule) {
+    this.rules.push(rule);
+  }
+
+}
+
+Types.registerType('Rule', Rule);
 /// <reference path="Rule.ts"/>
 /// <reference path="Term.ts"/>
 /// <reference path="Fact.ts"/>
@@ -131,18 +225,47 @@ class RuleEngine {
     */    
   }
 
-  public query(q: Query):bool {
-    var result = false;
+  public query(q: Query) {
     var foundRules = this.searchRules(this.rules, q.name, q.args); 
     for (var i in foundRules) {
       console.log("_dbg about to fire rule with name: " + foundRules[i].name + "\n");
       this.fireRule(foundRules[i]);
-      if(foundRules[i].args[0].grounded == q.args[0].name){
-        result = true;
-
-      }
     }
-    return result;
+    console.log("_dbg # rules found: " + foundRules.length + "\n");
+    return 0;
   }
 }
   
+/*
+Implementing example:
+
+mortal(X) :-
+human(X).
+human(socrates).
+
+*/
+
+/// <reference path="RuleEngine.ts"/>
+/// <reference path="Atom.ts"/>
+/// <reference path="Rule.ts"/>
+/// <reference path="Term.ts"/>
+/// <reference path="Fact.ts"/>
+/// <reference path="Query.ts"/>
+
+
+var re = new RuleEngine();
+var mortal_rule = new Rule('mortal');
+var term_X = new Term('X');
+mortal_rule.addArg(term_X);
+var human_rule = new Rule('human');
+human_rule.addArg(term_X);
+mortal_rule.addRule(human_rule);
+var a1 = new Atom('socrates');
+var human_fact = new Fact('human');
+human_fact.addAtom(a1);
+re.addFact(human_fact);
+re.addRule(mortal_rule);
+
+var query1 = new Query('mortal');
+query1.addArg(a1);
+var query_result = re.query(query1);

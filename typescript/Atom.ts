@@ -5,3 +5,5 @@ class Atom {
   }
 
 }
+
+Types.registerType('Atom', Atom);
