@@ -8,3 +8,4 @@ var Fact = (function () {
     };
     return Fact;
 })();
+Types.registerType('Fact', Fact);

@@ -4,3 +4,4 @@ var Atom = (function () {
     }
     return Atom;
 })();
+Types.registerType('Atom', Atom);

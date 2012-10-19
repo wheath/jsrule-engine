@@ -12,3 +12,4 @@ var Rule = (function () {
     };
     return Rule;
 })();
+Types.registerType('Rule', Rule);

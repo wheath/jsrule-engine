@@ -8,3 +8,4 @@ var Query = (function () {
     };
     return Query;
 })();
+Types.registerType('Query', Query);
