@@ -4,14 +4,10 @@
 
 class RuleEngine {
   private rules : Rule[] = [];
-  private facts : Fact[] = [];
+  private choices : any[] = [];
 
   public addRule(rule: Rule) {
     this.rules.push(rule);
-  }
-
-  public addFact(fact: Fact) {
-    this.facts.push(fact);
   }
 
   public getTypeName(inst: any) {
@@ -26,9 +22,18 @@ class RuleEngine {
     return typeName;
   }
 
+  public findArg(name: string, args: any[]) {
+    for(var i=0; i < args.length; i++) {
+      if(name == args[i].name) {
+        return args[i];
+      }   
+    }
+  }
+
   public isArgsMatch(args1: any[], args2: any[]) {
     var match = true;
-    /*
+   
+    /* 
     console.log("_dbg TypeName q : "+ this.getTypeName(q) + "\n");
     console.log("_dbg TypeName r : "+ this.getTypeName(r) + "\n");
     console.log("_dbg typeof q : "+ typeof q +"\n");
@@ -36,6 +41,9 @@ class RuleEngine {
     console.log("_dbg q num args: "+q.args.length.toString()+"\n");
     console.log("_dbg r num args: "+r.args.length.toString()+"\n");
     */
+    console.log("_dbg args1.length: " + args1.length + "\n");
+    console.log("_dbg args2.length: " + args2.length + "\n");
+    
     if (args1.length == args2.length) {
       console.log("_dbg num args match\n");
 	/* TODO: handle grounding and entangling of logical variables */
@@ -57,6 +65,9 @@ class RuleEngine {
   }
 
   public searchRules(rules: Rule[], name: string, args: any[]):Rule[] {
+    console.log("_dbg in searchRules\n");
+    console.log("_dbg num rules searching: " + rules.length + "\n");
+    console.log("_dbg searching for name: " + name + "\n");
     var foundRules = [];
     for (var i in rules) {
       console.log("_dbg rule name: " + rules[i].name + "\n");
@@ -72,77 +83,63 @@ class RuleEngine {
     return foundRules;
   }
 
-  public searchFacts(name: string):Fact[] {
-    console.log("_dbg searching for facts with name: "+name +"\n");
-    var foundFacts = [];
-    for (var i in this.facts) {
-      if (name == this.facts[i].name) {
-        foundFacts.push(this.facts[i]); 
-      }
-      
-    }
-
-    return foundFacts;
-  }
-
   public fireRule(r: Rule) {
 
     console.log("_dbg firing rule: " + r.name + "\n");
-    for (var l in r.rules) {
-
-      var foundRules = this.searchRules(this.rules, r.rules[l].name, r.rules[l].args); 
-      if(foundRules.length > 0) {
-      } else {
-        console.log("_dbg searching for facts with name: "+r.rules[l].name+"\n");
-	var foundFacts = this.searchFacts(r.rules[l].name);
-        console.log("_dbg num foundFacts found: "+foundFacts.length+"\n");
-	for (var i in foundFacts) {
-          console.log("_dbg processing fact name: "+foundFacts[i].name +"\n");
-	  for(var j in r.rules[l].args) {
-	    if(this.getTypeName(r.rules[l].args[j]) == 'Term') {
-	      for (var m in foundFacts[i].atoms) {
-	        r.rules[l].args[j].setVal(foundFacts[i].atoms[m].name);  
-	      }   
-	    }
-
-	  }
-	}
-
+    if(r.rules.length == 0) {
+      console.log("_dbg executing query rule: " + r.name + "\n");
+      var foundRules = this.searchRules(this.rules, r.name, r.args); 
+      console.log("_dbg num rules found: " + foundRules.length + "\n");
+      for(var k in foundRules) {
+        r.entangle(foundRules[k]);
+        this.fireRule(foundRules[k]);
+        //foundRules[k].afterFire();
+        r.afterFire();
       }
+    }
+
+    for (var l in r.rules) {
+      if(r.rules[l].args.length > 0) {
+        var foundRules = this.searchRules(this.rules, r.rules[l].name, r.rules[l].args); 
+      console.log("_dbg num rules found: " + foundRules.length + "\n");
+      for(var k in foundRules) {
+        this.fireRule(foundRules[k]);
+      }
+
+      } else {
+        if(r.rules[l].name.indexOf('=') > -1) {
+          var n = r.rules[l].name.split('=');
+          //console.log("_dbg n: "+ JSON.stringify(n) +"\n");
+          //console.log("_dbg num args: "+ r.args.length +"\n");
+          
+          var arg = this.findArg(n[0], r.args);
+          arg.setVal(n[1]);
+        }
+      }
+      r.afterFire();
       this.fireRule(r.rules[l]);
     }
-    /*
-      if(foundRules.length > 0) {
-	for (var k in foundRules) {
-	  this.fireRule(foundRules[k]);
-	}
-      } else {
-	var foundFacts = this.searchFacts(r.name);
-	for (var i in foundFacts) {
-	  for(var j in r.args) {
-	    if(this.getTypeName(r.args[j]) == 'Term') {
-	      r.args[j].setVal(foundFacts[i].args[0]);  
-	    }
-
-	  }
-	}
-      }
-    } 
-    */    
   }
 
-  public query(q: Query):bool {
+  public handleChoices(q: Query) {
+    while(this.choices.length > 0) {
+      var rule = this.choices.pop();
+      console.log("_dbg about to fire rule with name: " + rule.name + "\n");
+      q.entangle(rule);
+      this.fireRule(rule);
+      q.afterFire();
+    }
+  }
+
+  public query(q: Query) {
     var result = false;
     var foundRules = this.searchRules(this.rules, q.name, q.args); 
+    console.log("_dbg total # of rules found: " + foundRules.length + "\n");
     for (var i in foundRules) {
-      console.log("_dbg about to fire rule with name: " + foundRules[i].name + "\n");
-      this.fireRule(foundRules[i]);
-      if(foundRules[i].args[0].grounded == q.args[0].name){
-        result = true;
-
-      }
+      this.choices.push(foundRules[i]);
     }
-    return result;
+    this.handleChoices(q);
+
   }
 }
   
