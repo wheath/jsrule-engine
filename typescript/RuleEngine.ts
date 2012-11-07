@@ -10,7 +10,7 @@ class RuleEngine {
     this.rules.push(rule);
   }
 
-  public getTypeName(inst: any) {
+  public static getTypeName(inst: any) {
     var typeName = undefined;
     for (var clsName in Types.types) {
       /* console.log("_dbg clsName: "+ clsName +"\n"); */
@@ -32,31 +32,10 @@ class RuleEngine {
 
   public isArgsMatch(args1: any[], args2: any[]) {
     var match = true;
-   
-    /* 
-    console.log("_dbg TypeName q : "+ this.getTypeName(q) + "\n");
-    console.log("_dbg TypeName r : "+ this.getTypeName(r) + "\n");
-    console.log("_dbg typeof q : "+ typeof q +"\n");
-    console.log("_dbg q.toString() : "+ q.toString() +"\n");
-    console.log("_dbg q num args: "+q.args.length.toString()+"\n");
-    console.log("_dbg r num args: "+r.args.length.toString()+"\n");
-    */
-    console.log("_dbg args1.length: " + args1.length + "\n");
-    console.log("_dbg args2.length: " + args2.length + "\n");
-    
+
     if (args1.length == args2.length) {
       console.log("_dbg num args match\n");
 	/* TODO: handle grounding and entangling of logical variables */
-	/*
-      for(var i=0; i < q.args.length; i++) {
-	console.log("_dbg q arg #: " + i + " type: " + this.getTypeName(q.args[i]));
-	console.log("_dbg r arg #: " + i + " type: " + this.getTypeName(r.args[i]));
-	this.getTypeName(q.args[i]) != this.getTypeName(r.args[i])) {
-	if(this.getTypeName(q.args[i]) != this.getTypeName(r.args[i])) {
-	  match=false;    
-	}
-      }
-	*/
     } else {
       match=false;
     }
@@ -121,25 +100,7 @@ class RuleEngine {
     }
   }
 
-  public handleChoices(q: Query) {
-    while(this.choices.length > 0) {
-      var rule = this.choices.pop();
-      console.log("_dbg about to fire rule with name: " + rule.name + "\n");
-      q.entangle(rule);
-      this.fireRule(rule);
-      q.afterFire();
-    }
-  }
-
-  public query(q: Query) {
-    var result = false;
-    var foundRules = this.searchRules(this.rules, q.name, q.args); 
-    console.log("_dbg total # of rules found: " + foundRules.length + "\n");
-    for (var i in foundRules) {
-      this.choices.push(foundRules[i]);
-    }
-    this.handleChoices(q);
-
-  }
 }
+
+
   
