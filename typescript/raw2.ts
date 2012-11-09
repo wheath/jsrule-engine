@@ -133,10 +133,31 @@ class RuleEngine {
 
   public isArgsMatch(args1: any[], args2: any[]) {
     var match = true;
-
+   
+    /* 
+    console.log("_dbg TypeName q : "+ this.getTypeName(q) + "\n");
+    console.log("_dbg TypeName r : "+ this.getTypeName(r) + "\n");
+    console.log("_dbg typeof q : "+ typeof q +"\n");
+    console.log("_dbg q.toString() : "+ q.toString() +"\n");
+    console.log("_dbg q num args: "+q.args.length.toString()+"\n");
+    console.log("_dbg r num args: "+r.args.length.toString()+"\n");
+    */
+    console.log("_dbg args1.length: " + args1.length + "\n");
+    console.log("_dbg args2.length: " + args2.length + "\n");
+    
     if (args1.length == args2.length) {
       console.log("_dbg num args match\n");
 	/* TODO: handle grounding and entangling of logical variables */
+	/*
+      for(var i=0; i < q.args.length; i++) {
+	console.log("_dbg q arg #: " + i + " type: " + this.getTypeName(q.args[i]));
+	console.log("_dbg r arg #: " + i + " type: " + this.getTypeName(r.args[i]));
+	this.getTypeName(q.args[i]) != this.getTypeName(r.args[i])) {
+	if(this.getTypeName(q.args[i]) != this.getTypeName(r.args[i])) {
+	  match=false;    
+	}
+      }
+	*/
     } else {
       match=false;
     }
@@ -201,9 +222,31 @@ class RuleEngine {
     }
   }
 
+/*
+  public handleChoices(q: Query) {
+    while(this.choices.length > 0) {
+      var rule = this.choices.pop();
+      console.log("_dbg about to fire rule with name: " + rule.name + "\n");
+      q.entangle(rule);
+      this.fireRule(rule);
+      q.afterFire();
+    }
+  }
+*/
+
+/*
+  public query(q: Query) {
+    var result = false;
+    var foundRules = this.searchRules(this.rules, q.name, q.args); 
+    console.log("_dbg total # of rules found: " + foundRules.length + "\n");
+    for (var i in foundRules) {
+      this.choices.push(foundRules[i]);
+    }
+    this.handleChoices(q);
+
+  }
 }
-
-
+*/
   
 /*
 Implementing example:
@@ -214,47 +257,4 @@ human(socrates).
 
 */
 
-/// <reference path="RuleEngine.ts"/>
-/// <reference path="Atom.ts"/>
-/// <reference path="Rule.ts"/>
-/// <reference path="Term.ts"/>
-/// <reference path="Fact.ts"/>
-/// <reference path="Query.ts"/>
-
-
-var re = new RuleEngine();
-//var mortal_rule = new Rule('mortal');
-var term_X = new Term('X');
-//mortal_rule.addArg(term_X);
-
-var human_rule = new Rule('human');
-human_rule.addArg(term_X);
-var assignX = new Rule('X=socrates');
-human_rule.addRule(assignX);
-
-var q_human = new Rule('human');
-//q_human.addArg(term_X);
-//mortal_rule.addRule(q_human);
-//re.addRule(mortal_rule);
-re.addRule(human_rule);
-
-var human_rule2 = new Rule('human');
-var term_X2 = new Term('X');
-human_rule2.addArg(term_X2);
-var assignX2 = new Rule('X=aristotle');
-human_rule2.addRule(assignX2);
-re.addRule(human_rule2);
-
-//var query1 = new Query('mortal');
-//var a2 = new Atom('aristotle');
-var a2 = new Atom('socrates');
-//query1.addArg(a2);
-//q_human.addArg(a2);
-q_human.addArg(term_X);
-//var query_result = re.query(query1);
-re.fireRule(q_human);
-//re.query(query1);
-console.log("_dbg term_X.grounded: " + term_X.grounded + "\n");
-console.log("_dbg q_human.args[0].name: " + q_human.args[0].name + "\n");
-console.log("_dbg proof query_result: " + q_human.proven + "\n");
-console.log("_dbg solutions query_result: " + JSON.stringify(q_human.solutions) + "\n");
+console.log('test');
