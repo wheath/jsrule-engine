@@ -4,7 +4,7 @@
 
 class RuleEngine {
   private rules : Rule[] = [];
-  private choices : any[] = [];
+  private static choices : any[] = [];
 
   public addRule(rule: Rule) {
     this.rules.push(rule);
@@ -27,6 +27,33 @@ class RuleEngine {
       if(name == args[i].name) {
         return args[i];
       }   
+    }
+  }
+
+  public backTrack() {
+    var is_backTracked = false;
+    var found_rule = undefined;
+    while(!is_backTracked) {
+      if(RuleEngine.choices.length > 0) {
+        var rule_or_term = RuleEngine.choices.pop();
+        if(RuleEngine.getTypeName(rule_or_term) == 'Term') {
+          rule_or_term.reset();
+        } else if(RuleEngine.getTypeName(rule_or_term) == 'Rule') {
+          found_rule = rule_or_term;
+          is_backTracked = true;
+        } else {
+          throw new TypeError("BackTrack error, unknown type popped from choice point stack");
+        }
+      } else {
+        is_backTracked = true;
+      }
+
+    }
+
+    if(found_rule) {
+      this.fireRule(found_rule);  
+    } else {
+      console.log("_dbg backTrack found no rules to fire on choice point stack");
     }
   }
 

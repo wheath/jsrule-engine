@@ -48,6 +48,10 @@ class Term {
     }
   }
 
+  public reset() {
+    this.grounded = this;
+  }
+
   public unify(t: any):bool {
     console.log("_dbg in unify");
     console.log("_dbg t type: " + RuleEngine.getTypeName(t));
@@ -58,9 +62,13 @@ class Term {
       this.grounded = t;
       unified = true;
     } else if(this.isBoundorAliased()) {
-      return this.grounded.unify(t);  
+      unified = this.grounded.unify(t);  
     } else {
       unified = false;
+    }
+
+    if(unified) {
+      RuleEngine.choices.push(this);
     }
 
     return unified;

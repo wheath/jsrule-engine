@@ -33,6 +33,9 @@ exports.testUnify = function(test){
 
   console.log("_dbg term_X2.getGrounded(): " + term_X2.getGrounded());
   test.equal(term_X2.getGrounded(), 1);
+  console.log("_dbg RuleEngine.choices.length: " + RuleEngine.choices.length);
+  re.backTrack();
+  console.log("_dbg RuleEngine.choices.length: " + RuleEngine.choices.length);
   test.done();
 };
 
