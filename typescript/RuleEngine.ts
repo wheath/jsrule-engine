@@ -62,18 +62,33 @@ class RuleEngine {
     return foundRules;
   }
 
+  public unifyRuleHeaders(r1: Rule, r2: Rule) {
+    console.log("_dbg in unifyRuleHeaders");
+    for(var i=0;i < r1.args.length; i++) {
+      if(RuleEngine.getTypeName(r1.args[i]) == 'Term') {
+        console.log("_dbg calling unify on r1");
+        r1.args[i].unify(r2.args[i]);
+        console.log("_dbg r1.args[i].grounded type: " + RuleEngine.getTypeName(r1.args[i].grounded));
+      } else if(RuleEngine.getTypeName(r2.args[i]) == 'Term') {
+        console.log("_dbg calling unify on r2");
+        r2.args[i].unify(r1.args[i]);
+      }
+    }
+  }
+
   public fireRule(r: Rule) {
 
     console.log("_dbg firing rule: " + r.name + "\n");
-    if(r.rules.length == 0) {
+    if(r.is_query()) {
       console.log("_dbg executing query rule: " + r.name + "\n");
       var foundRules = this.searchRules(this.rules, r.name, r.args); 
       console.log("_dbg num rules found: " + foundRules.length + "\n");
       for(var k in foundRules) {
-        r.entangle(foundRules[k]);
+        //r.entangle(foundRules[k]);
+        this.unifyRuleHeaders(r, foundRules[k]);
         this.fireRule(foundRules[k]);
         //foundRules[k].afterFire();
-        r.afterFire();
+        //r.afterFire();
       }
     }
 
@@ -92,10 +107,11 @@ class RuleEngine {
           //console.log("_dbg num args: "+ r.args.length +"\n");
           
           var arg = this.findArg(n[0], r.args);
-          arg.setVal(n[1]);
+          //arg.setVal(n[1]);
+          arg.unify(n[1]);
         }
       }
-      r.afterFire();
+      //r.afterFire();
       this.fireRule(r.rules[l]);
     }
   }
