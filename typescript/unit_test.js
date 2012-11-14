@@ -14,3 +14,25 @@ exports.testRuleDeepCopy = function(test){
   test.done();
 };
 
+exports.testUnify = function(test){
+  var re = new RuleEngine();
+  var term_X = new Term('X');
+  var test_rule = new Rule('human');
+  test_rule.addArg(term_X);
+  var test_clause = new Rule('X=1');
+  test_rule.addRule(test_clause);
+
+  re.addRule(test_rule);
+
+  var q_human= new Rule('human');
+  var term_X2 = new Term('X');
+  q_human.addArg(term_X2);
+  re.fireRule(q_human);
+  console.log("_dbg RuleEngine.getTypeName(term_X2.grounded): " + RuleEngine.getTypeName(term_X2.grounded));
+  console.log("_dbg RuleEngine.getTypeName(term_X.grounded): " + RuleEngine.getTypeName(term_X.grounded));
+
+  console.log("_dbg term_X2.getGrounded(): " + term_X2.getGrounded());
+  test.equal(term_X2.getGrounded(), 1);
+  test.done();
+};
+
