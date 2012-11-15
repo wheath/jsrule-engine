@@ -41,11 +41,13 @@ class Term {
   }
 
   public isGrounded():bool {
+    var is_grounded = true;
     if(this.grounded == this) {
-      return false;
+      is_grounded = false;
     } else if(this.isBoundorAliased()) {
-      return this.grounded.isGrounded();
+      is_grounded = this.grounded.isGrounded();
     }
+    return is_grounded;
   }
 
   public reset() {
@@ -54,6 +56,7 @@ class Term {
 
   public unify(t: any):bool {
     console.log("_dbg in unify");
+    console.log("_dbg t.name: " + t.name);
     console.log("_dbg t type: " + RuleEngine.getTypeName(t));
     var unified = false;
 
@@ -76,6 +79,9 @@ class Term {
 
   public getGrounded():any {
     console.log("_dbg in getGrounded()");
+    if(this.isFree()) {
+      return this;
+    }
     var ret_val = this.grounded;
     if(this.isBoundorAliased()) {
       console.log("_dbg aliased or bounded, searching chain...");

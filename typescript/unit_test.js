@@ -14,8 +14,9 @@ exports.testRuleDeepCopy = function(test){
   test.done();
 };
 
-exports.testUnify = function(test){
+exports.testUnify = function(test) {
   var re = new RuleEngine();
+
   var term_X = new Term('X');
   var test_rule = new Rule('human');
   test_rule.addArg(term_X);
@@ -28,14 +29,156 @@ exports.testUnify = function(test){
   var term_X2 = new Term('X');
   q_human.addArg(term_X2);
   re.fireRule(q_human);
-  console.log("_dbg RuleEngine.getTypeName(term_X2.grounded): " + RuleEngine.getTypeName(term_X2.grounded));
-  console.log("_dbg RuleEngine.getTypeName(term_X.grounded): " + RuleEngine.getTypeName(term_X.grounded));
-
-  console.log("_dbg term_X2.getGrounded(): " + term_X2.getGrounded());
+ 
   test.equal(term_X2.getGrounded(), 1);
-  console.log("_dbg RuleEngine.choices.length: " + RuleEngine.choices.length);
-  re.backTrack();
-  console.log("_dbg RuleEngine.choices.length: " + RuleEngine.choices.length);
+  test.done();
+};
+
+exports.testBackTrack = function(test) {
+  var re = new RuleEngine();
+
+  var term_X = new Term('X');
+  var test_rule = new Rule('human');
+  test_rule.addArg(term_X);
+  var test_clause = new Rule('X=2');
+  test_rule.addRule(test_clause);
+
+  re.addRule(test_rule);
+
+  var term_X = new Term('X');
+  var test_rule = new Rule('human');
+  test_rule.addArg(term_X);
+  var test_clause = new Rule('X=1');
+  test_rule.addRule(test_clause);
+
+  re.addRule(test_rule);
+
+  var q_human= new Rule('human');
+  var term_X2 = new Term('X');
+  q_human.addArg(term_X2);
+  re.fireRule(q_human);
+ 
+  console.log("_dbg first solution term_X2.getGrounded(): " + term_X2.getGrounded());
+  console.log("_dbg num choice points: " + RuleEngine.choices.length);
+  if(term_X2.isGrounded()) {
+    console.log("_dbg pushing first solution");
+    q_human.solutions.push(term_X2.getGrounded());
+  }
+  if(RuleEngine.choices.length >0){ 
+    do {
+      re.backTrack();
+      if(term_X2.isGrounded()) {
+        console.log("_dbg next solution term_X2.getGrounded(): " + term_X2.getGrounded());
+        console.log("_dbg pushing next solution");
+        q_human.solutions.push(term_X2.getGrounded());
+      }
+    } while(RuleEngine.choices.length >0); 
+
+  }
+  console.log("_dbg total solutions found for q_human query: " + q_human.solutions.length);
+    
+  test.equal(q_human.solutions[0], 2);
+  test.equal(q_human.solutions[1], 1);
+  test.done();
+};
+
+exports.testCut = function(test) {
+  var re = new RuleEngine();
+
+  var term_X = new Term('X');
+  var test_rule = new Rule('human');
+  test_rule.addArg(term_X);
+  var test_clause = new Rule('X=2');
+  test_rule.addRule(test_clause);
+  var test_clause = new Rule('!');
+  test_rule.addRule(test_clause);
+
+  re.addRule(test_rule);
+
+  var term_X = new Term('X');
+  var test_rule = new Rule('human');
+  test_rule.addArg(term_X);
+  var test_clause = new Rule('X=1');
+  test_rule.addRule(test_clause);
+
+  re.addRule(test_rule);
+
+  var q_human= new Rule('human');
+  var term_X2 = new Term('X');
+  q_human.addArg(term_X2);
+  re.fireRule(q_human);
+ 
+  console.log("_dbg first solution term_X2.getGrounded(): " + term_X2.getGrounded());
+  console.log("_dbg num choice points: " + RuleEngine.choices.length);
+  if(term_X2.isGrounded()) {
+    console.log("_dbg pushing first solution");
+    q_human.solutions.push(term_X2.getGrounded());
+  }
+  if(RuleEngine.choices.length >0){ 
+    do {
+      re.backTrack();
+      if(term_X2.isGrounded()) {
+        console.log("_dbg next solution term_X2.getGrounded(): " + term_X2.getGrounded());
+        console.log("_dbg pushing next solution");
+        q_human.solutions.push(term_X2.getGrounded());
+      }
+    } while(RuleEngine.choices.length >0); 
+
+  }
+  console.log("_dbg total solutions found for q_human query: " + q_human.solutions.length);
+    
+  test.equal(q_human.solutions[0], 2);
+  test.equal(q_human.solutions.length, 1);
+  test.done();
+};
+
+exports.testFail = function(test) {
+  var re = new RuleEngine();
+
+  var term_X = new Term('X');
+  var test_rule = new Rule('human');
+  test_rule.addArg(term_X);
+  var test_clause = new Rule('X=2');
+  test_rule.addRule(test_clause);
+  var test_clause = new Rule('fail');
+  test_rule.addRule(test_clause);
+
+  re.addRule(test_rule);
+
+  var term_X = new Term('X');
+  var test_rule = new Rule('human');
+  test_rule.addArg(term_X);
+  var test_clause = new Rule('X=1');
+  test_rule.addRule(test_clause);
+
+  re.addRule(test_rule);
+
+  var q_human= new Rule('human');
+  var term_X2 = new Term('X');
+  q_human.addArg(term_X2);
+  re.fireRule(q_human);
+ 
+  console.log("_dbg first solution term_X2.getGrounded(): " + term_X2.getGrounded());
+  console.log("_dbg num choice points: " + RuleEngine.choices.length);
+  if(term_X2.isGrounded()) {
+    console.log("_dbg pushing first solution");
+    q_human.solutions.push(term_X2.getGrounded());
+  }
+  if(RuleEngine.choices.length >0){ 
+    do {
+      re.backTrack();
+      if(term_X2.isGrounded()) {
+        console.log("_dbg next solution term_X2.getGrounded(): " + term_X2.getGrounded());
+        console.log("_dbg pushing next solution");
+        q_human.solutions.push(term_X2.getGrounded());
+      }
+    } while(RuleEngine.choices.length >0); 
+
+  }
+  console.log("_dbg total solutions found for q_human query: " + q_human.solutions.length);
+    
+  test.equal(q_human.solutions[0], 1);
+  test.equal(q_human.solutions.length, 1);
   test.done();
 };
 

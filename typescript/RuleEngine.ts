@@ -32,14 +32,14 @@ class RuleEngine {
 
   public backTrack() {
     var is_backTracked = false;
-    var found_rule = undefined;
+    var found_choice = undefined;
     while(!is_backTracked) {
       if(RuleEngine.choices.length > 0) {
-        var rule_or_term = RuleEngine.choices.pop();
-        if(RuleEngine.getTypeName(rule_or_term) == 'Term') {
-          rule_or_term.reset();
-        } else if(RuleEngine.getTypeName(rule_or_term) == 'Rule') {
-          found_rule = rule_or_term;
+        var choice_or_term = RuleEngine.choices.pop();
+        if(RuleEngine.getTypeName(choice_or_term) == 'Term') {
+          choice_or_term.reset();
+        } else if(RuleEngine.getTypeName(choice_or_term) == 'Choice') {
+          found_choice = choice_or_term;
           is_backTracked = true;
         } else {
           throw new TypeError("BackTrack error, unknown type popped from choice point stack");
@@ -50,10 +50,11 @@ class RuleEngine {
 
     }
 
-    if(found_rule) {
-      this.fireRule(found_rule);  
+    if(found_choice) {
+      var rule_copy = this.prepareToFire(found_choice.query, found_choice.rule);
+      this.fireRule(rule_copy);
     } else {
-      console.log("_dbg backTrack found no rules to fire on choice point stack");
+      console.log("_dbg backTrack found no choices to fire on choice point stack");
     }
   }
 
@@ -101,45 +102,81 @@ class RuleEngine {
         r2.args[i].unify(r1.args[i]);
       }
     }
+    console.log("_dbg exiting unifyRuleHeaders");
+  }
+
+  public handleFoundRules(query: Rule, foundRules: Rule[]) {
+    for(var i=1; i <foundRules.length;i++) {
+      var choice = new Choice(query, foundRules[i]);
+      RuleEngine.choices.push(choice);
+    }
+  }
+
+  public prepareToFire(query: Rule, rule: Rule) {
+    var rule_copy = rule.deepcopy();
+    this.unifyRuleHeaders(query, rule_copy);
+
+    return rule_copy;
   }
 
   public fireRule(r: Rule) {
 
     console.log("_dbg firing rule: " + r.name + "\n");
+    console.log("_dbg1 r.args[0]: " + RuleEngine.getTypeName(r.args[0])); 
     if(r.is_query()) {
       console.log("_dbg executing query rule: " + r.name + "\n");
       var foundRules = this.searchRules(this.rules, r.name, r.args); 
       console.log("_dbg num rules found: " + foundRules.length + "\n");
-      for(var k in foundRules) {
-        //r.entangle(foundRules[k]);
-        this.unifyRuleHeaders(r, foundRules[k]);
-        this.fireRule(foundRules[k]);
-        //foundRules[k].afterFire();
-        //r.afterFire();
+
+      this.handleFoundRules(r, foundRules);
+
+      if(foundRules.length) {
+        var rule_copy = this.prepareToFire(r, foundRules[0]);
+        this.fireRule(rule_copy);
       }
+
+      console.log("_dbg r.args[0]: " + RuleEngine.getTypeName(r.args[0])); 
+      console.log("_dbg r.args[0] val: " + r.args[0].getGrounded()); 
+      console.log("_dbg pushing solution r.args[0] val: " + r.args[0].getGrounded()); 
     }
 
+    var is_fail = false;
     for (var l in r.rules) {
       if(r.rules[l].args.length > 0) {
         var foundRules = this.searchRules(this.rules, r.rules[l].name, r.rules[l].args); 
-      console.log("_dbg num rules found: " + foundRules.length + "\n");
-      for(var k in foundRules) {
-        this.fireRule(foundRules[k]);
-      }
+	console.log("_dbg num rules found: " + foundRules.length + "\n");
+        this.handleFoundRules(r.rules[l], foundRules);
+        if(foundRules.length) {
+          var rule_copy = this.prepareToFire(r, foundRules[0]);
+          this.fireRule(rule_copy);
+        }
+        
 
       } else {
+        console.log("_dbg processing rule name: " + r.rules[l].name);
         if(r.rules[l].name.indexOf('=') > -1) {
           var n = r.rules[l].name.split('=');
           //console.log("_dbg n: "+ JSON.stringify(n) +"\n");
           //console.log("_dbg num args: "+ r.args.length +"\n");
           
           var arg = this.findArg(n[0], r.args);
-          //arg.setVal(n[1]);
+          console.log("_dbg arg name: "+ arg.name +"\n");
           arg.unify(n[1]);
-        }
+        } else if(r.rules[l].name.indexOf('!') > -1) {
+          console.log("_dbg executing cut, emptying choice points");
+          RuleEngine.choices = [];
+        } else if(r.rules[l].name.indexOf('fail') > -1) {
+          console.log("_dbg executing fail");
+          is_fail = true;
+          break;
+        }   
       }
-      //r.afterFire();
-      this.fireRule(r.rules[l]);
+
+    }
+
+    if(is_fail) {
+      console.log("_dbg fail detected, backtracking...");
+      this.backTrack();
     }
   }
 
