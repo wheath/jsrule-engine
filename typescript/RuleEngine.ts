@@ -119,6 +119,52 @@ class RuleEngine {
     return rule_copy;
   }
 
+  public handleNonCallBodyRule(header:Rule, bodyRule: Rule):bool {
+    var is_fail = false;
+    if(bodyRule.name.indexOf('=') > -1) {
+      var n = bodyRule.name.split('=');
+      //console.log("_dbg n: "+ JSON.stringify(n) +"\n");
+      //console.log("_dbg num args: "+ r.args.length +"\n");
+      
+      var arg = this.findArg(n[0], header.args);
+      console.log("_dbg arg name: "+ arg.name +"\n");
+      arg.unify(n[1]);
+    } else if(bodyRule.name.indexOf('!') > -1) {
+      console.log("_dbg executing cut, emptying choice points");
+      RuleEngine.choices = [];
+    } else if(bodyRule.name.indexOf('fail') > -1) {
+      console.log("_dbg executing fail");
+      is_fail = true;
+    }   
+
+    return is_fail;
+  }
+
+  public handleBodyRules(header: Rule, bodyRules: Rule[]):bool {
+    var is_fail = false;
+    for (var l in bodyRules) {
+      var bodyRule = bodyRules[l];
+      if(!bodyRule.is_non_call()) {
+        var foundRules = this.searchRules(this.rules, bodyRule.name, bodyRule.args); 
+	console.log("_dbg num rules found: " + foundRules.length + "\n");
+        this.handleFoundRules(bodyRule, foundRules);
+        if(foundRules.length) {
+          var rule_copy = this.prepareToFire(bodyRule, foundRules[0]);
+          this.fireRule(rule_copy);
+        }
+        
+      } else {
+        console.log("_dbg processing rule name: " + bodyRule.name);
+        is_fail = this.handleNonCallBodyRule(header, bodyRule);
+        if(is_fail) {
+          break;
+        }   
+      }
+
+    }
+    return is_fail;
+  }
+
   public fireRule(r: Rule) {
 
     console.log("_dbg firing rule: " + r.name + "\n");
@@ -140,42 +186,10 @@ class RuleEngine {
       console.log("_dbg pushing solution r.args[0] val: " + r.args[0].getGrounded()); 
     }
 
-    var is_fail = false;
-    for (var l in r.rules) {
-      if(r.rules[l].args.length > 0) {
-        var foundRules = this.searchRules(this.rules, r.rules[l].name, r.rules[l].args); 
-	console.log("_dbg num rules found: " + foundRules.length + "\n");
-        this.handleFoundRules(r.rules[l], foundRules);
-        if(foundRules.length) {
-          var rule_copy = this.prepareToFire(r, foundRules[0]);
-          this.fireRule(rule_copy);
-        }
-        
-
-      } else {
-        console.log("_dbg processing rule name: " + r.rules[l].name);
-        if(r.rules[l].name.indexOf('=') > -1) {
-          var n = r.rules[l].name.split('=');
-          //console.log("_dbg n: "+ JSON.stringify(n) +"\n");
-          //console.log("_dbg num args: "+ r.args.length +"\n");
-          
-          var arg = this.findArg(n[0], r.args);
-          console.log("_dbg arg name: "+ arg.name +"\n");
-          arg.unify(n[1]);
-        } else if(r.rules[l].name.indexOf('!') > -1) {
-          console.log("_dbg executing cut, emptying choice points");
-          RuleEngine.choices = [];
-        } else if(r.rules[l].name.indexOf('fail') > -1) {
-          console.log("_dbg executing fail");
-          is_fail = true;
-          break;
-        }   
-      }
-
-    }
+    var is_fail = this.handleBodyRules(r, r.rules);
 
     if(is_fail) {
-      console.log("_dbg fail detected, backtracking...");
+      console.log("_dbg fail detected in bodyRules execution, backtracking...");
       this.backTrack();
     }
   }

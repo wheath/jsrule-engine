@@ -2,6 +2,7 @@ var Rule = (function () {
     function Rule(name) {
         this.args = [];
         this.rules = [];
+        this.non_call_regex = /=|fail|!/;
         this.solutions = [];
         this.name = name;
         this.proven = false;
@@ -29,7 +30,10 @@ var Rule = (function () {
         this.rules.push(rule);
     };
     Rule.prototype.is_query = function () {
-        return !this.rules.length;
+        return !this.rules.length && this.args.length && !this.non_call_regex.test(this.name);
+    };
+    Rule.prototype.is_non_call = function () {
+        return !this.rules.length && !this.args.length && this.non_call_regex.test(this.name);
     };
     return Rule;
 })();
