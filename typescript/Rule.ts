@@ -2,6 +2,7 @@ class Rule {
   public name: string;
   public args: any[] = [];
   public rules: Rule[] = [];
+  private non_call_regex =  /=|fail|!|o\(|i\(/;
 
   public solutions:any[] = [];
   proven: bool;
@@ -41,7 +42,15 @@ class Rule {
   }
 
   is_query() {
-    return !this.rules.length;
+    return !this.rules.length && 
+           this.args.length &&
+           !this.non_call_regex.test(this.name);
+  }
+
+  is_non_call() {
+    return !this.rules.length && 
+           !this.args.length && 
+           this.non_call_regex.test(this.name);
   }
 
 }
