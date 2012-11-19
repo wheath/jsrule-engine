@@ -38,7 +38,8 @@ class Rule {
   }
 
   addRule(rule: Rule) {
-    this.rules.push(rule);
+    //this.rules.push(rule);
+    this.rules.unshift(rule);
   }
 
   is_query() {

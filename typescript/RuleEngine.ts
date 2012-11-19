@@ -1,13 +1,20 @@
+
+//import fs = module('fs');
+
 /// <reference path="Rule.ts"/>
 /// <reference path="Term.ts"/>
 /// <reference path="Fact.ts"/>
+//var fs = require('fs');
+
+declare var require: any;
 
 class RuleEngine {
   private rules : Rule[] = [];
   private static choices : any[] = [];
 
   public addRule(rule: Rule) {
-    this.rules.push(rule);
+    //this.rules.push(rule);
+    this.rules.unshift(rule);
   }
 
   public static getTypeName(inst: any) {
@@ -120,6 +127,7 @@ class RuleEngine {
   }
 
   public handleNonCallBodyRule(header:Rule, bodyRule: Rule):bool {
+    console.log("_dbg in handleNonCallBodyRule\n");
     var is_fail = false;
     if(bodyRule.name.indexOf('=') > -1) {
       var n = bodyRule.name.split('=');
@@ -135,7 +143,20 @@ class RuleEngine {
     } else if(bodyRule.name.indexOf('fail') > -1) {
       console.log("_dbg executing fail");
       is_fail = true;
-    }   
+    } else if(bodyRule.name.indexOf('o(') > -1) {
+      var r = /^o\((.*)\)/;
+      console.log(bodyRule.name.match(r)[1]);
+    } else if(bodyRule.name.indexOf('i(') > -1) {
+      var r = /^i\((.*)\)/;
+      var arg_name = bodyRule.name.match(r)[1];
+      console.log("_dbg input into varible: " + arg_name);
+      var fs = require('fs');
+      var input_str = fs.readFileSync('/dev/stdin', 'utf-8')
+      var arg = this.findArg(arg_name, header.args);
+      //var input_str = '';
+      console.log("_dbg unifying value: " + input_str + " with arg name: " + arg.name);
+      arg.unify(input_str);
+    }
 
     return is_fail;
   }
@@ -145,6 +166,7 @@ class RuleEngine {
     for (var l in bodyRules) {
       var bodyRule = bodyRules[l];
       if(!bodyRule.is_non_call()) {
+        console.log("_dbg processing rule name: "+ bodyRule.name +" as a call");
         var foundRules = this.searchRules(this.rules, bodyRule.name, bodyRule.args); 
 	console.log("_dbg num rules found: " + foundRules.length + "\n");
         this.handleFoundRules(bodyRule, foundRules);
