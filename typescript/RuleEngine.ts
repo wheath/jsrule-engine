@@ -1,9 +1,11 @@
 
 //import fs = module('fs');
 
+/// <reference path="Types.ts"/>
 /// <reference path="Rule.ts"/>
 /// <reference path="Term.ts"/>
 /// <reference path="Fact.ts"/>
+/// <reference path="Choice"/>
 //var fs = require('fs');
 
 declare var require: any;
