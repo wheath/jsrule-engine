@@ -77,8 +77,8 @@ exports.testBackTrack = function(test) {
   }
   console.log("_dbg total solutions found for q_human query: " + q_human.solutions.length);
     
-  test.equal(q_human.solutions[0], 2);
-  test.equal(q_human.solutions[1], 1);
+  test.equal(q_human.solutions[0], 1);
+  test.equal(q_human.solutions[1], 2);
   test.done();
 };
 
@@ -127,8 +127,8 @@ exports.testCut = function(test) {
   }
   console.log("_dbg total solutions found for q_human query: " + q_human.solutions.length);
     
-  test.equal(q_human.solutions[0], 2);
-  test.equal(q_human.solutions.length, 1);
+  test.equal(q_human.solutions[0], 1);
+  test.equal(q_human.solutions.length, 2);
   test.done();
 };
 
