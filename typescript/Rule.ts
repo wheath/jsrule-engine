@@ -1,6 +1,7 @@
 class Rule {
   public name: string;
-  public args: any[] = [];
+  public args: any[] = []; //args defined in the rule head
+  public b_args: any[] = []; //args defined in rule body dynamically
   public rules: Rule[] = [];
   private non_call_regex =  /=|fail|!|o\(|i\(/;
 
@@ -24,6 +25,10 @@ class Rule {
 	call_copy.args.unshift(this.rules[r].args[a].deepcopy());
       }
 
+      for (var b=0;b< this.rules[r].b_args.length;b++) {
+	call_copy.b_args.unshift(this.rules[r].b_args[b].deepcopy());
+      }
+
       rule_copy.rules.unshift(call_copy);
     }
 
@@ -35,6 +40,10 @@ class Rule {
 
   addArg(arg: any) {
     this.args.push(arg);
+  }
+
+  addBarg(b_arg: any) {
+    this.b_args.push(b_arg);
   }
 
   addRule(rule: Rule) {
