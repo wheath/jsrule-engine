@@ -135,6 +135,10 @@ class RuleEngine {
       //console.log("_dbg num args: "+ r.args.length +"\n");
       
       var arg = this.findArg(n[0], header.args);
+      if(!arg) {
+        arg = this.findArg(n[0], header.b_args);
+      }
+
       console.log("_dbg arg name: "+ arg.name +"\n");
       //arg.unify(n[1]);
       if(arg.getGrounded() != n[1]) {
@@ -147,6 +151,17 @@ class RuleEngine {
       //console.log("_dbg num args: "+ r.args.length +"\n");
       
       var arg = this.findArg(n[0], header.args);
+      if(!arg) {
+        arg = this.findArg(n[0], header.b_args);
+      }
+
+      if(!arg) {
+        if(is_debug) {
+          console.log("_dbg Term variable with name: " + n[0] + " not found, creating and adding to body args of header rule");
+        }
+        arg = new Term(n[0]);
+        header.addBarg(arg);
+      }
       console.log("_dbg arg name: "+ arg.name +"\n");
       arg.unify(n[1]);
     } else if(bodyRule.name.indexOf('!') > -1) {
@@ -165,6 +180,18 @@ class RuleEngine {
       var fs = require('fs');
       var input_str = fs.readFileSync('/dev/stdin', 'utf-8')
       var arg = this.findArg(arg_name, header.args);
+      if(!arg) {
+        arg = this.findArg(arg_name, header.b_args);
+      }
+
+      if(!arg) {
+        if(is_debug) {
+          console.log("_dbg Term variable with name: " + arg_name + " not found, creating and adding to body args of header rule");
+        }
+        arg = new Term(arg_name);
+        header.addBarg(arg);
+      }
+
       //var input_str = '';
       console.log("_dbg unifying value: " + input_str + " with arg name: " + arg.name);
       arg.unify(input_str);
