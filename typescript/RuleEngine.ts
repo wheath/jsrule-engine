@@ -129,7 +129,19 @@ class RuleEngine {
   public handleNonCallBodyRule(header:Rule, bodyRule: Rule):bool {
     console.log("_dbg in handleNonCallBodyRule\n");
     var is_fail = false;
-    if(bodyRule.name.indexOf('=') > -1) {
+    if(bodyRule.name.indexOf('==') > -1) {
+      var n = bodyRule.name.split('==');
+      //console.log("_dbg n: "+ JSON.stringify(n) +"\n");
+      //console.log("_dbg num args: "+ r.args.length +"\n");
+      
+      var arg = this.findArg(n[0], header.args);
+      console.log("_dbg arg name: "+ arg.name +"\n");
+      //arg.unify(n[1]);
+      if(arg.getGrounded() != n[1]) {
+        is_fail = true;
+      }
+    } else if(bodyRule.name.indexOf('=') > -1) {
+      //TODO: this only allows assignment X=1 not 1=X
       var n = bodyRule.name.split('=');
       //console.log("_dbg n: "+ JSON.stringify(n) +"\n");
       //console.log("_dbg num args: "+ r.args.length +"\n");
@@ -179,6 +191,7 @@ class RuleEngine {
         console.log("_dbg processing rule name: " + bodyRule.name);
         is_fail = this.handleNonCallBodyRule(header, bodyRule);
         if(is_fail) {
+          console.log("_dbg failure occurred executing body rule with name: " + bodyRule.name);
           break;
         }   
       }
