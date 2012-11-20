@@ -5,10 +5,11 @@ backward chaining object oriented typescript inference rules engine
 
 Quickstart:
 
+```
 cd typescript
-sh compile.sh
-sh cat.sh
-node main.js
+make
+node raw.js
+```
 
 Goal:
 
