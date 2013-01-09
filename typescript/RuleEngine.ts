@@ -332,7 +332,7 @@ class RuleEngine {
     if(RuleEngine.choices.length >0) {
       Util.output('There are other possible solutions, should the solver continue?\n');
       if(Util.input() == 'yes') {
-        re.backTrack();
+        this.backTrack();
         this.handleQueryResult(q);
       }
     }
