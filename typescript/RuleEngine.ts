@@ -1,14 +1,9 @@
-
-//import fs = module('fs');
-
+/// <reference path="Util.ts"/>
 /// <reference path="Types.ts"/>
 /// <reference path="Rule.ts"/>
 /// <reference path="Term.ts"/>
 /// <reference path="Fact.ts"/>
 /// <reference path="Choice"/>
-//var fs = require('fs');
-
-declare var require: any;
 
 class RuleEngine {
   private rules : Rule[] = [];
@@ -204,15 +199,16 @@ class RuleEngine {
       is_fail = true;
     } else if(bodyRule.name.indexOf('o(') > -1) {
       var r = /^o\((.*)\)/;
-      console.log(bodyRule.name.match(r)[1]);
+      Util.output(bodyRule.name.match(r)[1]);
     } else if(bodyRule.name.indexOf('i(') > -1) {
       var r = /^i\((.*)\)/;
       var arg_name = bodyRule.name.match(r)[1];
       if(is_debug) {
         console.log("_dbg input into varible: " + arg_name);
       }
-      var fs = require('fs');
-      var input_str = fs.readFileSync('/dev/stdin', 'utf-8')
+
+      var input_str = Util.input();
+
       console.log("\n");
       var arg = this.findArg(arg_name, header.args);
       if(!arg) {
@@ -227,7 +223,6 @@ class RuleEngine {
         header.addBarg(arg);
       }
 
-      //var input_str = '';
       if(is_debug) {
         console.log("_dbg unifying value: " + input_str + " with arg name: " + arg.name);
       }
@@ -310,6 +305,38 @@ class RuleEngine {
       }
       this.backTrack();
     }
+  }
+
+  public isQuerySolved(r_args: any[]) {
+    var is_solved = true;
+    for(var i=0; i < r_args.length; i++) {
+      if(!r_args[i].isGrounded()) {
+        is_solved = false;
+      }   
+    }
+
+    return is_solved;
+  }
+
+  public handleQueryResult(q: Rule) {
+    if(this.isQuerySolved(q.args)) { 
+      Util.output('Query: ' + q.name + ' was solved, solutions are: \n');
+
+      for(var i=0; i < q.args.length; i++) {
+        Util.output('arg name: ' + q.args[i].name + ' ground val: ' + q.args[i].getGrounded() + '\n');
+      }   
+    } else {
+      Util.output('Query: ' + q.name + ' was not solved');
+    }
+
+    if(RuleEngine.choices.length >0) {
+      Util.output('There are other possible solutions, should the solver continue?\n');
+      if(Util.input() == 'yes') {
+        re.backTrack();
+        this.handleQueryResult(q);
+      }
+    }
+
   }
 
 }

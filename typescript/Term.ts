@@ -55,13 +55,17 @@ class Term {
   }
 
   public unify(t: any):bool {
-    console.log("_dbg in unify");
-    console.log("_dbg t.name: " + t.name);
-    console.log("_dbg t type: " + RuleEngine.getTypeName(t));
+    if(is_debug) {
+      console.log("_dbg in unify");
+      console.log("_dbg t.name: " + t.name);
+      console.log("_dbg t type: " + RuleEngine.getTypeName(t));
+    }
     var unified = false;
 
     if(this.isFree()) {
-      console.log("Term is free, assigning grounded");
+      if(is_debug) {
+        console.log("_dbg term is free, assigning grounded");
+      }
       this.grounded = t;
       unified = true;
     } else if(this.isBoundorAliased()) {
@@ -78,13 +82,17 @@ class Term {
   }
 
   public getGrounded():any {
-    console.log("_dbg in getGrounded()");
+    if(is_debug) {
+      console.log("_dbg in getGrounded()");
+    }
     if(this.isFree()) {
       return this;
     }
     var ret_val = this.grounded;
     if(this.isBoundorAliased()) {
-      console.log("_dbg aliased or bounded, searching chain...");
+      if(is_debug) {
+        console.log("_dbg aliased or bounded, searching chain...");
+      }
       ret_val = this.grounded.getGrounded();  
     }
 

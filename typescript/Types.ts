@@ -1,4 +1,4 @@
-var is_debug = true;
+var is_debug = false;
 
 class Types {
   static types:any[] = [];
