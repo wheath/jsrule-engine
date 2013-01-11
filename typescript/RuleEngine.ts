@@ -8,6 +8,15 @@
 class RuleEngine {
   private rules : Rule[] = [];
   private static choices : any[] = [];
+  private body_rules : any[] = [];
+  public rule_firing: Rule;
+  public body_rule_firing: Rule;
+  public async_hold: bool = false;
+
+  public addBodyRule(rule: Rule) {
+    //this.rules.push(rule);
+    this.body_rules.unshift(rule);
+  }
 
   public addRule(rule: Rule) {
     //this.rules.push(rule);
@@ -37,6 +46,10 @@ class RuleEngine {
   public backTrack() {
     var is_backTracked = false;
     var found_choice = undefined;
+    this.rule_firing = undefined;
+    this.body_rule_firing = undefined;
+    this.body_rules = [];
+
     while(!is_backTracked) {
       if(RuleEngine.choices.length > 0) {
         var choice_or_term = RuleEngine.choices.pop();
@@ -145,7 +158,40 @@ class RuleEngine {
     return rule_copy;
   }
 
-  public handleNonCallBodyRule(header:Rule, bodyRule: Rule):bool {
+  public handleAsyncInput(input_str) {
+    this.async_hold = false;
+    
+    var header = this.rule_firing;
+    var bodyRule = this.body_rule_firing;
+
+    var r = /^i\((.*)\)/;
+    var arg_name = bodyRule.name.match(r)[1];
+    
+
+    console.log("\n");
+    var arg = this.findArg(arg_name, header.args);
+    if(!arg) {
+      arg = this.findArg(arg_name, header.b_args);
+    }
+
+    if(!arg) {
+      if(is_debug) {
+	console.log("_dbg Term variable with name: " + arg_name + " not found, creating and adding to body args of header rule");
+      }
+      arg = new Term(arg_name);
+      header.addBarg(arg);
+    }
+
+    if(is_debug) {
+      console.log("_dbg unifying value: " + input_str + " with arg name: " + arg.name);
+    }
+    arg.unify(input_str);
+
+    this.handleNonCallAsync(false);
+
+  }
+
+  public handleNonCallBodyRule(header:Rule, bodyRule: Rule) {
     if(is_debug) {
       console.log("_dbg in handleNonCallBodyRule\n");
     }
@@ -207,67 +253,73 @@ class RuleEngine {
         console.log("_dbg input into varible: " + arg_name);
       }
 
-      var input_str = Util.input();
+      Util.input(this);
+    }
 
-      console.log("\n");
-      var arg = this.findArg(arg_name, header.args);
-      if(!arg) {
-        arg = this.findArg(arg_name, header.b_args);
-      }
+    this.handleNonCallAsync(is_fail);
+  }
 
-      if(!arg) {
-        if(is_debug) {
-          console.log("_dbg Term variable with name: " + arg_name + " not found, creating and adding to body args of header rule");
-        }
-        arg = new Term(arg_name);
-        header.addBarg(arg);
+  public prepareToCall(call_rule: Rule) {
+    if(is_debug) {
+      console.log("_dbg processing rule name: "+ call_rule.name +" as a call");
+    }
+    var foundRules = this.searchRules(this.rules, call_rule.name, call_rule.args); 
+    if(is_debug) {
+      console.log("_dbg num rules found: " + foundRules.length + "\n");
+    }
+    this.handleFoundRules(call_rule, foundRules);
+    if(foundRules.length) {
+      var rule_copy = this.prepareToFire(call_rule, foundRules[0]);
+      return rule_copy;
+    }
+
+  }
+
+  public handleNonCallAsync(is_fail) {
+    if(is_debug) {
+      console.log("_dbg in handleNonCallAsync");
+    }
+
+    if(!this.async_hold) {
+      if(is_fail) {
+	if(is_debug) {
+	  console.log("_dbg fail detected in bodyRules execution, backtracking...");
+	}
+	this.backTrack();
       }
 
       if(is_debug) {
-        console.log("_dbg unifying value: " + input_str + " with arg name: " + arg.name);
+        console.log("_dbg about to pop a body rule");
+        console.log("_dbg this.body_rules.length: " + this.body_rules.length);
       }
-      arg.unify(input_str);
-    }
 
-    return is_fail;
+      this.body_rule_firing = this.body_rules.pop();
+      this.handleBodyRule();
+    }
   }
 
-  public handleBodyRules(header: Rule, bodyRules: Rule[]):bool {
-    var is_fail = false;
-    for (var l in bodyRules) {
-      var bodyRule = bodyRules[l];
+  public handleBodyRule() {
+    //for (var l in bodyRules) {
+      var header = this.rule_firing;
+      var bodyRule = this.body_rule_firing;
+      if(!bodyRule) {
+        return;
+      }
       if(!bodyRule.is_non_call()) {
-        if(is_debug) {
-          console.log("_dbg processing rule name: "+ bodyRule.name +" as a call");
-        }
-        var foundRules = this.searchRules(this.rules, bodyRule.name, bodyRule.args); 
-        if(is_debug) {
-	  console.log("_dbg num rules found: " + foundRules.length + "\n");
-        }
-        this.handleFoundRules(bodyRule, foundRules);
-        if(foundRules.length) {
-          var rule_copy = this.prepareToFire(bodyRule, foundRules[0]);
-          this.fireRule(rule_copy);
-        }
-        
+        var rule_copy = this.prepareToCall(bodyRule);
+        this.fireRule(rule_copy);
       } else {
         if(is_debug) {
-          console.log("_dbg processing rule name: " + bodyRule.name);
+          console.log("_dbg processing non call rule name: " + bodyRule.name);
         }   
-        is_fail = this.handleNonCallBodyRule(header, bodyRule);
-        if(is_fail) {
-          if(is_debug) {
-            console.log("_dbg failure occurred executing body rule with name: " + bodyRule.name);
-          } 
-          break;
-        }   
+        this.handleNonCallBodyRule(header, bodyRule);
       }
 
-    }
-    return is_fail;
+    //}
   }
 
   public fireRule(r: Rule) {
+    this.rule_firing = r;
 
     if(is_debug) {
       console.log("_dbg firing rule: " + r.name + "\n");
@@ -278,17 +330,8 @@ class RuleEngine {
       if(is_debug) {
         console.log("_dbg executing query rule: " + r.name + "\n");
       }
-      var foundRules = this.searchRules(this.rules, r.name, r.args); 
-      if(is_debug) {
-        console.log("_dbg num rules found: " + foundRules.length + "\n");
-      }
-
-      this.handleFoundRules(r, foundRules);
-
-      if(foundRules.length) {
-        var rule_copy = this.prepareToFire(r, foundRules[0]);
-        this.fireRule(rule_copy);
-      }
+      var rule_copy = this.prepareToCall(r);
+      this.fireRule(rule_copy);
 
       if(is_debug) {
         console.log("_dbg r.args[0]: " + RuleEngine.getTypeName(r.args[0])); 
@@ -297,14 +340,14 @@ class RuleEngine {
       }
     }
 
-    var is_fail = this.handleBodyRules(r, r.rules);
-
-    if(is_fail) {
-      if(is_debug) {
-        console.log("_dbg fail detected in bodyRules execution, backtracking...");
-      }
-      this.backTrack();
+    for (var l in r.rules) {
+      var bodyRule = r.rules[l];
+      this.addBodyRule(bodyRule);
     }
+
+    this.body_rule_firing = this.body_rules.pop();
+
+    this.handleBodyRule();
   }
 
   public isQuerySolved(r_args: any[]) {
@@ -318,6 +361,7 @@ class RuleEngine {
     return is_solved;
   }
 
+/*
   public handleQueryResult(q: Rule) {
     if(this.isQuerySolved(q.args)) { 
       Util.output('Query: ' + q.name + ' was solved, solutions are: \n');
@@ -338,6 +382,7 @@ class RuleEngine {
     }
 
   }
+*/
 
 }
 

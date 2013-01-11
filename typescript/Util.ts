@@ -13,7 +13,8 @@ class Util {
     }
   }
 
-  public static input() {
+  public static input(re: RuleEngine) {
+    re.async_hold = true;
     if(Util.is_in_browser()) {
       var input_str = prompt("Enter input", "Type your input here");
     } else {
@@ -22,7 +23,8 @@ class Util {
       var input_str = fs.readFileSync('/dev/stdin', 'utf-8');
     }
 
-    return input_str;
+    re.handleAsyncInput(input_str);
+    //return input_str;
   }
 
 }
