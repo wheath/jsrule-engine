@@ -4,9 +4,9 @@
   q_ram.addArg(term_X);
   re.fireRule(q_ram);
 
-  re.handleQueryResult(q_ram);
+  //re.handleQueryResult(q_ram);
    
-  //console.log("_dbg first solution term_X.getGrounded(): " + term_X.getGrounded());
+  console.log("_dbg first solution term_X.getGrounded(): " + term_X.getGrounded());
   /*
   console.log("_dbg num choice points: " + RuleEngine.choices.length);
   if(term_X2.isGrounded()) {
