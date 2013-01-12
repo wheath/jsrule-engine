@@ -10,6 +10,7 @@ class Util {
     if(Util.is_in_browser()) {
       //alert(s);
       document.getElementById('output_div').innerHTML = s;
+      window.prompt(s, 'info only, just press ok');
     } else {
       console.log(s + '\n');
     }
@@ -22,7 +23,7 @@ class Util {
       console.log("_dbg rule_firing # b_args: " + re.rule_firing.b_args.length);
     }
     if(Util.is_in_browser()) {
-      var input_str = window.prompt("Enter input", "Type your input here");
+      var input_str = window.prompt("Enter input", "Enter yes or no");
       re.handleAsyncInput(input_str);
     } else {
       var prompt = require('prompt');
