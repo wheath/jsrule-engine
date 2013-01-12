@@ -8,7 +8,8 @@ class Util {
 
   public static output(s: any) {
     if(Util.is_in_browser()) {
-      alert(s);
+      //alert(s);
+      document.getElementById('output_div').innerHTML = s;
     } else {
       console.log(s + '\n');
     }
@@ -21,7 +22,8 @@ class Util {
       console.log("_dbg rule_firing # b_args: " + re.rule_firing.b_args.length);
     }
     if(Util.is_in_browser()) {
-      var input_str = prompt("Enter input", "Type your input here");
+      var input_str = window.prompt("Enter input", "Type your input here");
+      re.handleAsyncInput(input_str);
     } else {
       var prompt = require('prompt');
       prompt.start();
