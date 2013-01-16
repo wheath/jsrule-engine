@@ -9,5 +9,26 @@
 </script>
 
 <script type="text/javascript">                                         
+
+function handle_binary_input() {
+  console.log("_dbg in handle_binary_input");
+  var oRadio = document.forms[0].elements['binary_input'];
+  var radio_val = '';
+ 
+   for(var i = 0; i < oRadio.length; i++)
+   {
+      if(oRadio[i].checked)
+      {
+         radio_val = oRadio[i].value;
+      }
+   }
+
+   console.log("_dbg radio_val: " + radio_val);
+   var input_div = document.getElementById("input_div");
+   input_div.style.display = "none";
+   RuleEngine.input_cb(radio_val);
+}
+
+
 function onLoad() {
 
