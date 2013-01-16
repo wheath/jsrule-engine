@@ -1,9 +1,10 @@
 function setup_re() {
-  var re = new RuleEngine();
+  var re = RuleEngine.getREInst();
 
   var small_ram_term = new Term('X');
   var small_ram_rule = new Rule('choose_ram');
   small_ram_rule.addArg(small_ram_term);
+
 
   var small_o1 = new Rule('o(Do you want a small amount of Ram?)');
   re.addRule(small_o1);
@@ -22,6 +23,7 @@ function setup_re() {
   small_ram_rule.addRule(small_X);
 
   re.addRule(small_ram_rule);
+
 
   var med_ram_term = new Term('X');
   var med_ram_rule = new Rule('choose_ram');
