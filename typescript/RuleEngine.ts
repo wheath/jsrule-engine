@@ -6,24 +6,85 @@
 /// <reference path="Choice"/>
 
 class RuleEngine {
-  private rules : Rule[] = [];
+  private static re_inst : any = 0;
+  private static rules : Rule[] = [];
   private static choices : any[] = [];
-  private body_rules : any[] = [];
-  public rule_firing: Rule;
-  public body_rule_firing: Rule;
-  public async_hold: bool = false;
+  private static body_rules : any[] = [];
+  public static rule_firing: any;
+  public static body_rule_firing: any;
+  public static async_hold: bool = false;
+  public static base_query: any;
+  public static input_cb: any;
+  public static finished_cb: any;
+
+  public static reset() {
+     RuleEngine.re_inst = 0;
+     RuleEngine.rules = [];
+     RuleEngine.choices = [];   
+     RuleEngine.body_rules = [];
+     RuleEngine.async_hold = false;
+     RuleEngine.input_cb = 0;
+     RuleEngine.base_query = 0;
+     RuleEngine.rule_firing = 0;
+     RuleEngine.body_rule_firing = 0; 
+     RuleEngine.finished_cb = 0; 
+  }
+
+  public isFinished() {
+    var is_finished = false;
+    if(RuleEngine.body_rules.length == 0) {
+      if(RuleEngine.choices.length == 0) {
+        is_finished = true;
+      }
+    }
+
+    return is_finished;
+  }
+
+  public handleBaseQueryFinish() {
+    if(RuleEngine.async_hold) {
+      return;
+    }
+    if(is_debug) {
+      console.log("_dbg in handleBaseQueryFinish");
+    }
+    //if(this.rule_firing == this.base_query) {
+      if(RuleEngine.body_rules.length == 0) {
+        if(is_debug) {
+          console.log("_dbg base_query == r, about to call handleQueryResult");
+        }
+        if(this.isFinished()) {
+          if(RuleEngine.finished_cb) {
+            RuleEngine.finished_cb();
+          }
+        }
+        this.handleQueryResult();
+      }
+    //}
+  }
+
+  public static getREInst() {
+    if(!RuleEngine.re_inst) {
+      RuleEngine.re_inst = new RuleEngine();
+    }
+
+    return RuleEngine.re_inst;
+  }
 
   public addBodyRule(rule: Rule) {
     //this.rules.push(rule);
-    this.body_rules.unshift(rule);
+    RuleEngine.body_rules.unshift(rule);
   }
 
   public addRule(rule: Rule) {
+    //console.log("_dbg adding rule with name: " + rule.name);
+    //console.log("_dbg num rules: " + rule.rules.length);
     //this.rules.push(rule);
-    this.rules.unshift(rule);
+    RuleEngine.rules.unshift(rule);
   }
 
   public static getTypeName(inst: any) {
+    //console.log("_dbg in getTypeName");
     var typeName = undefined;
     for (var clsName in Types.types) {
       /* console.log("_dbg clsName: "+ clsName +"\n"); */
@@ -35,7 +96,7 @@ class RuleEngine {
     return typeName;
   }
 
-  public findArg(name: string, args: any[]) {
+  public static findArg(name: string, args: any[]) {
     for(var i=0; i < args.length; i++) {
       if(name == args[i].name) {
         return args[i];
@@ -46,9 +107,13 @@ class RuleEngine {
   public backTrack() {
     var is_backTracked = false;
     var found_choice = undefined;
-    this.rule_firing = undefined;
-    this.body_rule_firing = undefined;
-    this.body_rules = [];
+    RuleEngine.rule_firing = undefined;
+    RuleEngine.body_rule_firing = undefined;
+    RuleEngine.body_rules = [];
+    if(is_debug) {
+      console.log("_dbg in backTrack");
+      console.log("_dbg RuleEngine.choices.length: " + RuleEngine.choices.length);
+    }
 
     while(!is_backTracked) {
       if(RuleEngine.choices.length > 0) {
@@ -152,6 +217,9 @@ class RuleEngine {
   }
 
   public prepareToFire(query: Rule, rule: Rule) {
+    if(is_debug) {
+      console.log("_dbg in prepareToFire");
+    }
     var rule_copy = rule.deepcopy();
     this.unifyRuleHeaders(query, rule_copy);
 
@@ -159,14 +227,14 @@ class RuleEngine {
   }
 
   public popBodyRule() {
-    if(!this.async_hold) {
+    if(!RuleEngine.async_hold) {
 
       if(is_debug) {
         console.log("_dbg about to pop a body rule");
-        console.log("_dbg this.body_rules.length: " + this.body_rules.length);
+        console.log("_dbg RuleEngine.body_rules.length: " + RuleEngine.body_rules.length);
       }
 
-      this.body_rule_firing = this.body_rules.pop();
+      RuleEngine.body_rule_firing = RuleEngine.body_rules.pop();
     }
   }
 
@@ -174,19 +242,32 @@ class RuleEngine {
     if(is_debug) {
       console.log("_dbg in handleAsyncInput");
     }
-    this.async_hold = false;
+    RuleEngine.async_hold = false;
+    var re = RuleEngine.getREInst();
     
-    var header = this.rule_firing;
-    var bodyRule = this.body_rule_firing;
+    var header = RuleEngine.rule_firing;
+    var bodyRule = RuleEngine.body_rule_firing;
+    if(bodyRule) {
+      if(is_debug) {
+        console.log("_dbg bodyRule is defined");
+      }
+    } else {
+      if(is_debug) {
+        console.log("_dbg bodyRule is not defined");
+      }
+    }
+    if(is_debug) {
+      console.log("_dbg bodyRule.name: " + bodyRule.name);
+    }
 
     var r = /^i\((.*)\)/;
     var arg_name = bodyRule.name.match(r)[1];
     
 
     console.log("\n");
-    var arg = this.findArg(arg_name, header.args);
+    var arg = RuleEngine.findArg(arg_name, header.args);
     if(!arg) {
-      arg = this.findArg(arg_name, header.b_args);
+      arg = RuleEngine.findArg(arg_name, header.b_args);
     }
 
     if(!arg) {
@@ -205,7 +286,7 @@ class RuleEngine {
       console.log("_dbg num header.b_args: " + header.b_args.length);
     }
 
-    this.handleNonCallAsync(false);
+    re.handleNonCallAsync(false);
 
   }
 
@@ -224,12 +305,12 @@ class RuleEngine {
       }   
       
       //console.log("_dbg header.args: "+ JSON.stringify(header.args) +"\n");
-      var arg = this.findArg(n[0], header.args);
+      var arg = RuleEngine.findArg(n[0], header.args);
       if(!arg) {
         if(is_debug) {
           console.log("_dbg header.b_args: "+ JSON.stringify(header.b_args) +"\n");
         }
-        arg = this.findArg(n[0], header.b_args);
+        arg = RuleEngine.findArg(n[0], header.b_args);
       }
 
       if(is_debug) {
@@ -246,9 +327,9 @@ class RuleEngine {
       //console.log("_dbg n: "+ JSON.stringify(n) +"\n");
       //console.log("_dbg num args: "+ r.args.length +"\n");
       
-      var arg = this.findArg(n[0], header.args);
+      var arg = RuleEngine.findArg(n[0], header.args);
       if(!arg) {
-        arg = this.findArg(n[0], header.b_args);
+        arg = RuleEngine.findArg(n[0], header.b_args);
       }
 
       if(!arg) {
@@ -280,7 +361,7 @@ class RuleEngine {
         console.log("_dbg input into varible: " + arg_name);
       }
 
-      Util.input(this);
+      Util.input(this.handleAsyncInput);
     }
 
     if(is_debug) {
@@ -294,12 +375,15 @@ class RuleEngine {
     if(is_debug) {
       console.log("_dbg processing rule name: "+ call_rule.name +" as a call");
     }
-    var foundRules = this.searchRules(this.rules, call_rule.name, call_rule.args); 
+    var foundRules = this.searchRules(RuleEngine.rules, call_rule.name, call_rule.args); 
     if(is_debug) {
       console.log("_dbg num rules found: " + foundRules.length + "\n");
     }
     this.handleFoundRules(call_rule, foundRules);
     if(foundRules.length) {
+      if(is_debug) {
+        console.log("_dbg foundRules[0].rules.length: " + foundRules[0].rules.length);
+      }
       var rule_copy = this.prepareToFire(call_rule, foundRules[0]);
       return rule_copy;
     }
@@ -309,44 +393,50 @@ class RuleEngine {
   public handleNonCallAsync(is_fail) {
     if(is_debug) {
       console.log("_dbg in handleNonCallAsync");
-      console.log("_dbg this.async_hold: " + this.async_hold);
-      if(this.rule_firing.b_args.length > 0) {
-        console.log("this.rule_firing.b_args[0].getGrounded(): " + this.rule_firing.b_args[0].getGrounded());
+      console.log("_dbg RuleEngine.async_hold: " + RuleEngine.async_hold);
+      if(RuleEngine.rule_firing.b_args.length > 0) {
+        console.log("RuleEngine.rule_firing.b_args[0].getGrounded(): " + RuleEngine.rule_firing.b_args[0].getGrounded());
 
       }
     }
 
-    if(this.async_hold) {
+    if(RuleEngine.async_hold) {
       return;
     }
 
-    if(!this.async_hold) {
+    if(!RuleEngine.async_hold) {
      
       if(is_debug) {
-        console.log("_dbg this.async_hold is false");
+        console.log("_dbg RuleEngine.async_hold is false");
       }
       if(is_fail) {
 	if(is_debug) {
 	  console.log("_dbg fail detected in bodyRules execution, backtracking...");
 	}
 	this.backTrack();
-      }
+      } 
 
+      
       this.popBodyRule();
       if(is_debug) {
         console.log("_dbg about to call handleBodyRule");
       }
       this.handleBodyRule();
+      this.handleBaseQueryFinish();
+      
     }
   }
 
   public handleBodyRule() {
-    if(this.async_hold) {
+    if(RuleEngine.async_hold) {
+      if(is_debug) {
+        console.log("_dbg async_hold is true not executing body rule");
+      }
       return;
     }
     //for (var l in bodyRules) {
-      var header = this.rule_firing;
-      var bodyRule = this.body_rule_firing;
+      var header = RuleEngine.rule_firing;
+      var bodyRule = RuleEngine.body_rule_firing;
       if(!bodyRule) {
         return;
       }
@@ -364,11 +454,12 @@ class RuleEngine {
   }
 
   public fireRule(r: Rule) {
-    this.rule_firing = r;
+    RuleEngine.rule_firing = r;
 
     if(is_debug) {
       console.log("_dbg firing rule: " + r.name + "\n");
-      console.log("_dbg1 r.args[0]: " + RuleEngine.getTypeName(r.args[0])); 
+      console.log("_dbg r.rules.length: " + r.rules.length); 
+      console.log("_dbg r.args[0]: " + RuleEngine.getTypeName(r.args[0])); 
     }
 
     if(r.is_query()) {
@@ -376,8 +467,13 @@ class RuleEngine {
         console.log("_dbg executing query rule: " + r.name + "\n");
       }
       var rule_copy = this.prepareToCall(r);
+      if(is_debug) {
+        console.log("_dbg about to fire rule_copy with name: " + rule_copy.name);
+        console.log("_dbg  rule_copy.rules.length: " + rule_copy.rules.length);
+      }
+
       this.fireRule(rule_copy);
-      if(this.async_hold) {
+      if(RuleEngine.async_hold) {
         return;
       }
 
@@ -388,7 +484,13 @@ class RuleEngine {
         console.log("_dbg pushing solution r.args[0] val: " + r.args[0].getGrounded()); 
       }
       */
+    } else {
+      if(is_debug) {
+        console.log("_dbg rule: " + r.name + " is not a query\n");
+      }
+
     }
+
 
     for (var l in r.rules) {
       var bodyRule = r.rules[l];
@@ -401,6 +503,7 @@ class RuleEngine {
     if(is_debug) {
       console.log("_dbg after handleBodyRule in fireRule");
     }
+    //this.handleBaseQueryFinish();
   }
 
   public isQuerySolved(r_args: any[]) {
@@ -414,28 +517,53 @@ class RuleEngine {
     return is_solved;
   }
 
-/*
-  public handleQueryResult(q: Rule) {
+  public handleFindMoreSolutions(input_str) {
+    if(is_debug) {
+      console.log("_dbg in handleFireMoreSolutions");
+    }
+    RuleEngine.async_hold = false;
+    if(input_str == 'yes') {
+      var re = RuleEngine.getREInst();
+      re.backTrack();
+      //re.handleQueryResult();
+    } else {
+      if(RuleEngine.finished_cb) {
+        RuleEngine.finished_cb();
+      }
+    }
+  }
+
+  public handleQueryResult() {
+    if(is_debug) {
+      console.log("_dbg in handleQueryResult");
+    }
+    var q = RuleEngine.base_query;
+    var output_ar = [];
     if(this.isQuerySolved(q.args)) { 
-      Util.output('Query: ' + q.name + ' was solved, solutions are: \n');
+      output_ar.push('Query: ' + q.name + ' was solved, solutions are: \n');
 
       for(var i=0; i < q.args.length; i++) {
-        Util.output('arg name: ' + q.args[i].name + ' ground val: ' + q.args[i].getGrounded() + '\n');
+        output_ar.push('arg name: ' + q.args[i].name + ' ground val: ' + q.args[i].getGrounded() + '\n');
       }   
     } else {
-      Util.output('Query: ' + q.name + ' was not solved');
+      output_ar.push('Query: ' + q.name + ' was not solved\n');
     }
 
     if(RuleEngine.choices.length >0) {
-      Util.output('There are other possible solutions, should the solver continue?\n');
-      if(Util.input() == 'yes') {
-        this.backTrack();
-        this.handleQueryResult(q);
+      if(is_debug) {
+        console.log("_dbg RuleEngine.choices.length: " + RuleEngine.choices.length);
       }
+      output_ar.push('There are other possible solutions, should the solver continue?\n');
+      Util.output(output_ar.join(''));
+      output_ar = [];
+      Util.input(this.handleFindMoreSolutions);
+    }
+
+    if(output_ar.length > 0) {
+      Util.output(output_ar.join(''));
     }
 
   }
-*/
 
 }
 

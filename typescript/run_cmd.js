@@ -2,10 +2,18 @@
   var q_ram = new Rule('choose_ram');
   var term_X = new Term('X');
   q_ram.addArg(term_X);
+  RuleEngine.base_query = q_ram;
+  RuleEngine.finished_cb = finishCB;
+
   re.fireRule(q_ram);
 
   if(is_debug) {
     console.log("_dbg after fireRule\n\n\n");
+    console.log("_dbg RuleEngine.body_rule_firing.name: " + RuleEngine.body_rule_firing.name);
+  }
+
+  function finishCB() {
+    console.log("_dbg finishCB called"); 
   }
 
   //re.handleQueryResult(q_ram);

@@ -21,6 +21,10 @@ class Term {
 
   public isBoundorAliased():bool {
      var ret_val = false;
+     /*
+     console.log("_dbg in isBoundorAliased");
+     console.log("_dbg in Term name: " + this.name);
+     */
      if(RuleEngine.getTypeName(this.grounded) == 'Atom') {
        ret_val = true;
      }
@@ -57,8 +61,8 @@ class Term {
   public unify(t: any):bool {
     if(is_debug) {
       console.log("_dbg in unify");
-      console.log("_dbg t.name: " + t.name);
-      console.log("_dbg t type: " + RuleEngine.getTypeName(t));
+      //console.log("_dbg t.name: " + t.name);
+      //console.log("_dbg t type: " + RuleEngine.getTypeName(t));
     }
     var unified = false;
 

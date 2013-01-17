@@ -14,8 +14,14 @@ class Rule {
   }
 
   deepcopy() {
+    if(is_debug) {
+      console.log("_dbg in Rule.deepcopy");
+    }
     var rule_copy = new Rule(this.name);
     for (var i=0;i< this.args.length;i++) {
+      if(is_debug) {
+        console.log("_dbg about to call deepcopy on arg with name: " + this.args[i].name);
+      }
       rule_copy.args.unshift(this.args[i].deepcopy());
     }
 
@@ -35,6 +41,9 @@ class Rule {
     rule_copy.proven = this.proven;
     rule_copy.solutions = this.solutions;
 
+    if(is_debug) {
+      console.log("_dbg about to return from Rule.deepcopy");
+    }
     return rule_copy;
   }
 
