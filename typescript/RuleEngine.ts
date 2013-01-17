@@ -16,6 +16,7 @@ class RuleEngine {
   public static base_query: any;
   public static input_cb: any;
   public static finished_cb: any;
+  public static more_solutions_prompt: bool = true;
 
   public static reset() {
      RuleEngine.re_inst = 0;
@@ -28,6 +29,7 @@ class RuleEngine {
      RuleEngine.rule_firing = 0;
      RuleEngine.body_rule_firing = 0; 
      RuleEngine.finished_cb = 0; 
+     RuleEngine.more_solutions_prompt = true; 
   }
 
   public isFinished() {
@@ -177,6 +179,8 @@ class RuleEngine {
             console.log("_dbg args match\n");
           }
           foundRules.push(rules[i]);
+        } else {
+          console.log("_dbg args do not match\n");
         }
       }
     }
@@ -195,11 +199,21 @@ class RuleEngine {
         }
         r1.args[i].unify(r2.args[i]);
         if(is_debug) {
+          console.log("_dbg unifying " + r2.args[i].name + " with " + r1.args[i].name);
           console.log("_dbg r1.args[i].grounded type: " + RuleEngine.getTypeName(r1.args[i].grounded));
+	  if(r2.args[i].name == 'HDX') {
+	    console.log("_dbg r1.args[i].getGrounded: " + r1.args[i].getGrounded());
+	    var bq_hd_arg = RuleEngine.base_query.args[1];
+	    console.log("_dbg bq_hd_arg name: " + bq_hd_arg.name);
+	    console.log("_dbg bq_hd_arg value: " + bq_hd_arg.getGrounded());
+	  }
         }
       } else if(RuleEngine.getTypeName(r2.args[i]) == 'Term') {
         if(is_debug) {
           console.log("_dbg calling unify on r2");
+        }
+        if(is_debug) {
+          console.log("_dbg unifying " + r1.args[i].name + " with " + r2.args[i].name);
         }
         r2.args[i].unify(r1.args[i]);
       }
@@ -340,9 +354,16 @@ class RuleEngine {
         header.addBarg(arg);
       }
       if(is_debug) {
-        console.log("_dbg arg name: "+ arg.name +"\n");
+        console.log("_dbg about to unity value: " + n[1] + " with arg name: "+ arg.name +"\n");
       }
       arg.unify(n[1]);
+      if(is_debug) {
+        if(arg.name == 'HDX') {
+          var bq_hd_arg = RuleEngine.base_query.args[1];
+          console.log("_dbg bq_hd_arg name: " + bq_hd_arg.name);
+          console.log("_dbg bq_hd_arg value: " + bq_hd_arg.getGrounded());
+        }
+      }
     } else if(bodyRule.name.indexOf('!') > -1) {
       console.log("_dbg executing cut, emptying choice points");
       RuleEngine.choices = [];
@@ -508,10 +529,20 @@ class RuleEngine {
 
   public isQuerySolved(r_args: any[]) {
     var is_solved = true;
+    if(is_debug) {
+      console.log("_dbg in isQuerySolved");
+    }
     for(var i=0; i < r_args.length; i++) {
       if(!r_args[i].isGrounded()) {
+        if(is_debug) {
+          console.log("_dbg term: " + r_args[i].name + " is not grounded");
+        }
         is_solved = false;
-      }   
+      } else {  
+        if(is_debug) {
+          console.log("_dbg term: " + r_args[i].name + " is grounded with value: " + r_args[i].getGrounded());
+        }
+      }
     }
 
     return is_solved;
@@ -556,7 +587,9 @@ class RuleEngine {
       output_ar.push('There are other possible solutions, should the solver continue?\n');
       Util.output(output_ar.join(''));
       output_ar = [];
-      Util.input(this.handleFindMoreSolutions);
+      if(RuleEngine.more_solutions_prompt == true) {
+        Util.input(this.handleFindMoreSolutions);
+      }
     }
 
     if(output_ar.length > 0) {

@@ -22,17 +22,20 @@ class Rule {
       if(is_debug) {
         console.log("_dbg about to call deepcopy on arg with name: " + this.args[i].name);
       }
-      rule_copy.args.unshift(this.args[i].deepcopy());
+      //rule_copy.args.unshift(this.args[i].deepcopy());
+      rule_copy.args.push(this.args[i].deepcopy());
     }
 
     for (var r=0;r< this.rules.length;r++) {
       var call_copy = new Rule(this.rules[r].name);
       for (var a=0;a< this.rules[r].args.length;a++) {
-	call_copy.args.unshift(this.rules[r].args[a].deepcopy());
+	//call_copy.args.unshift(this.rules[r].args[a].deepcopy());
+	call_copy.args.push(this.rules[r].args[a].deepcopy());
       }
 
       for (var b=0;b< this.rules[r].b_args.length;b++) {
-	call_copy.b_args.unshift(this.rules[r].b_args[b].deepcopy());
+	//call_copy.b_args.unshift(this.rules[r].b_args[b].deepcopy());
+	call_copy.b_args.push(this.rules[r].b_args[b].deepcopy());
       }
 
       rule_copy.rules.unshift(call_copy);
@@ -49,6 +52,7 @@ class Rule {
 
   addArg(arg: any) {
     this.args.push(arg);
+    //this.args.unshift(arg);
   }
 
   addBarg(b_arg: any) {

@@ -24,6 +24,28 @@ function setup_re() {
 
   re.addRule(small_ram_rule);
 
+  var small_hd_term = new Term('HDX');
+  var small_hd_rule = new Rule('choose_hd');
+  small_hd_rule.addArg(small_hd_term);
+
+
+  var small_hd_o1 = new Rule('o(Do you want a small HD?)');
+  re.addRule(small_hd_o1);
+  small_hd_rule.addRule(small_hd_o1);
+
+  var small_hd_i1 = new Rule('i(HDY)');
+  re.addRule(small_hd_i1);
+  small_hd_rule.addRule(small_hd_i1);
+
+  var small_hd_i1_eq_yes = new Rule('HDY==yes');
+  re.addRule(small_hd_i1_eq_yes);
+  small_hd_rule.addRule(small_hd_i1_eq_yes);
+
+  var small_hdX = new Rule('HDX=small');
+  re.addRule(small_hdX);
+  small_hd_rule.addRule(small_hdX);
+
+  re.addRule(small_hd_rule);
 
   var med_ram_term = new Term('X');
   var med_ram_rule = new Rule('choose_ram');
@@ -68,6 +90,24 @@ function setup_re() {
   large_ram_rule.addRule(large_X);
 
   re.addRule(large_ram_rule);
+
+  var q_ram_hd = new Rule('choose_ram_hd');
+  re.addRule(q_ram_hd);
+  var term_ram = new Term('RAM1');
+  var term_hd = new Term('HD1');
+  q_ram_hd.addArg(term_ram);
+  q_ram_hd.addArg(term_hd);
+
+  var b_ram = new Rule('choose_ram');
+  var term_X = new Term('RAM1');
+  b_ram.addArg(term_X);
+
+  var b_hd = new Rule('choose_hd');
+  var term_Y = new Term('HD1');
+  b_hd.addArg(term_Y);
+
+  q_ram_hd.addRule(b_ram);
+  q_ram_hd.addRule(b_hd);
 
   return re;
 }

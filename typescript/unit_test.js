@@ -28,6 +28,8 @@ exports.testUnify = function(test) {
   var q_human= new Rule('human');
   var term_X2 = new Term('X');
   q_human.addArg(term_X2);
+  RuleEngine.base_query = q_human;
+  RuleEngine.more_solutions_prompt = false;
   re.fireRule(q_human);
  
   test.equal(term_X2.getGrounded(), 1);
@@ -35,6 +37,7 @@ exports.testUnify = function(test) {
 };
 
 exports.testBackTrack = function(test) {
+  RuleEngine.reset();
   var re = new RuleEngine();
 
   var term_X = new Term('X');
@@ -56,6 +59,8 @@ exports.testBackTrack = function(test) {
   var q_human= new Rule('human');
   var term_X2 = new Term('X');
   q_human.addArg(term_X2);
+  RuleEngine.base_query = q_human;
+  RuleEngine.more_solutions_prompt = false;
   re.fireRule(q_human);
  
   console.log("_dbg first solution term_X2.getGrounded(): " + term_X2.getGrounded());
@@ -83,6 +88,7 @@ exports.testBackTrack = function(test) {
 };
 
 exports.testCut = function(test) {
+  RuleEngine.reset();
   var re = new RuleEngine();
 
   var term_X = new Term('X');
@@ -106,6 +112,8 @@ exports.testCut = function(test) {
   var q_human= new Rule('human');
   var term_X2 = new Term('X');
   q_human.addArg(term_X2);
+  RuleEngine.base_query = q_human;
+  RuleEngine.more_solutions_prompt = false;
   re.fireRule(q_human);
  
   console.log("_dbg first solution term_X2.getGrounded(): " + term_X2.getGrounded());
@@ -133,6 +141,7 @@ exports.testCut = function(test) {
 };
 
 exports.testFail = function(test) {
+  RuleEngine.reset();
   var re = new RuleEngine();
 
   var term_X = new Term('X');
@@ -156,6 +165,8 @@ exports.testFail = function(test) {
   var q_human= new Rule('human');
   var term_X2 = new Term('X');
   q_human.addArg(term_X2);
+  RuleEngine.base_query = q_human;
+  RuleEngine.more_solutions_prompt = false;
   re.fireRule(q_human);
  
   console.log("_dbg first solution term_X2.getGrounded(): " + term_X2.getGrounded());

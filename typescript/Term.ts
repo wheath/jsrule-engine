@@ -61,14 +61,21 @@ class Term {
   public unify(t: any):bool {
     if(is_debug) {
       console.log("_dbg in unify");
-      //console.log("_dbg t.name: " + t.name);
-      //console.log("_dbg t type: " + RuleEngine.getTypeName(t));
+      console.log("_dbg this.name: " + this.name);
+      console.log("_dbg t type: " + RuleEngine.getTypeName(t));
+      if(RuleEngine.getTypeName(t)) {
+        console.log("_dbg value: " + t);
+      }
+
     }
     var unified = false;
 
     if(this.isFree()) {
       if(is_debug) {
         console.log("_dbg term is free, assigning grounded");
+        if(RuleEngine.getTypeName(t)) {
+          console.log("_dbg to Term with name: " + t.name);
+        }
       }
       this.grounded = t;
       unified = true;
@@ -96,8 +103,12 @@ class Term {
     if(this.isBoundorAliased()) {
       if(is_debug) {
         console.log("_dbg aliased or bounded, searching chain...");
+        console.log("_dbg aliased or bounded from: " + ret_val.name);
       }
       ret_val = this.grounded.getGrounded();  
+      if(is_debug) {
+        console.log("_dbg aliased or bounded to: " + ret_val.name);
+      }
     }
 
     return ret_val;

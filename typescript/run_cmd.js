@@ -1,11 +1,34 @@
   var re = setup_re();
+  /*
   var q_ram = new Rule('choose_ram');
   var term_X = new Term('X');
-  q_ram.addArg(term_X);
-  RuleEngine.base_query = q_ram;
+
+  var q_hd = new Rule('choose_hd');
+  var term_Y = new Term('Y');
+  q_hd.addArg(term_Y);
+  */
+
+  var q_ram_hd = new Rule('choose_ram_hd');
+  var term_ram = new Term('RAM');
+  var term_hd = new Term('HD');
+  q_ram_hd.addArg(term_ram);
+  q_ram_hd.addArg(term_hd);
+
+  /*
+  var b_ram = new Rule('choose_ram');
+  var term_X = new Term('RAM');
+
+  var b_hd = new Rule('choose_hd');
+  var term_Y = new Term('HD');
+  q_ram_hd.addRule(b_ram);
+  q_ram_hd.addRule(b_hd);
+  */
+
+  
+  RuleEngine.base_query = q_ram_hd;
   RuleEngine.finished_cb = finishCB;
 
-  re.fireRule(q_ram);
+  re.fireRule(q_ram_hd);
 
   if(is_debug) {
     console.log("_dbg after fireRule\n\n\n");
