@@ -99,12 +99,10 @@ function setup_re() {
   q_ram_hd.addArg(term_hd);
 
   var b_ram = new Rule('choose_ram');
-  var term_X = new Term('RAM1');
-  b_ram.addArg(term_X);
+  b_ram.addArg(term_ram);
 
   var b_hd = new Rule('choose_hd');
-  var term_Y = new Term('HD1');
-  b_hd.addArg(term_Y);
+  b_hd.addArg(term_hd);
 
   q_ram_hd.addRule(b_ram);
   q_ram_hd.addRule(b_hd);

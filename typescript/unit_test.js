@@ -1,3 +1,5 @@
+/*
+
 exports.testRuleDeepCopy = function(test){
   var term_X = new Term('X');
   var human_rule = new Rule('human');
@@ -190,6 +192,61 @@ exports.testFail = function(test) {
     
   test.equal(q_human.solutions[0], 1);
   test.equal(q_human.solutions.length, 1);
+  test.done();
+};
+*/
+
+exports.testAliasing = function(test) {
+  RuleEngine.reset();
+  var re = new RuleEngine();
+
+  var term_X1 = new Term('X1');
+  var test1_rule = new Rule('test1');
+  test1_rule.addArg(term_X1);
+  var test1_clause = new Rule('X1=1');
+  test1_rule.addRule(test1_clause);
+
+  re.addRule(test1_rule);
+
+  var term_X2 = new Term('X2');
+  var test2_rule = new Rule('test2');
+  test2_rule.addArg(term_X2);
+  var test2_clause = new Rule('X2=2');
+  test2_rule.addRule(test2_clause);
+
+  re.addRule(test2_rule);
+
+  var term_X3 = new Term('X3');
+  var term_X4 = new Term('X4');
+  var test3_rule = new Rule('test3');
+  test3_rule.addArg(term_X3);
+  test3_rule.addArg(term_X4);
+
+  var test3_clause = new Rule('test1');
+  var bterm_X3 = new Term('X3');
+  //test3_clause.addArg(bterm_X3);
+  test3_clause.addArg(term_X3);
+  test3_rule.addRule(test3_clause);
+  var test3_clause2 = new Rule('test2');
+  var bterm_X4 = new Term('X4');
+  //test3_clause2.addArg(bterm_X4);
+  test3_clause2.addArg(term_X4);
+  test3_rule.addRule(test3_clause2);
+
+
+  re.addRule(test3_rule);
+
+  var q_test3= new Rule('test3');
+  var qterm_X3 = new Term('X3');
+  var qterm_X4 = new Term('X4');
+  q_test3.addArg(qterm_X3);
+  q_test3.addArg(qterm_X4);
+  RuleEngine.base_query = q_test3;
+  RuleEngine.more_solutions_prompt = false;
+  re.fireRule(q_test3);
+ 
+  test.equal(qterm_X3.getGrounded(), 1);
+  test.equal(qterm_X4.getGrounded(), 2);
   test.done();
 };
 

@@ -74,8 +74,8 @@ class RuleEngine {
   }
 
   public addBodyRule(rule: Rule) {
-    //this.rules.push(rule);
-    RuleEngine.body_rules.unshift(rule);
+    RuleEngine.body_rules.push(rule);
+    //RuleEngine.body_rules.unshift(rule);
   }
 
   public addRule(rule: Rule) {
@@ -135,7 +135,7 @@ class RuleEngine {
     }
 
     if(found_choice) {
-      var rule_copy = this.prepareToFire(found_choice.query, found_choice.rule);
+      var rule_copy = this.prepareToFire(found_choice.query, found_choice.rule, false);
       this.fireRule(rule_copy);
     } else {
       if(is_debug) {
@@ -188,9 +188,29 @@ class RuleEngine {
     return foundRules;
   }
 
+  public unifyHeaderArgsToBodyCallArgs(header: Rule, body_rule: Rule) {
+    if(is_debug) {
+      console.log("_dbg in unifyHeaderArgsToBodyCallArgs h: " + header.name + " b: " + body_rule.name);
+    }
+    for(var i=0;i < body_rule.args.length; i++) {
+      for(var j=0;j < header.args.length; j++) {
+        if(is_debug) {
+          console.log("_dbg cmp b arg name: " + body_rule.args[i].name + " with  header arg name" + header.args[j].name);
+        }
+        if(body_rule.args[i].name == header.args[j].name) {
+          header.args[j].unify(body_rule.args[i]);
+        }
+      }
+    }
+  }
+
   public unifyRuleHeaders(r1: Rule, r2: Rule) {
     if(is_debug) {
       console.log("_dbg in unifyRuleHeaders");
+      console.log("_dbg unifying r1: " + r1.name);
+      RuleEngine.dump_rule(r1);
+      console.log("_dbg with r2: " + r2.name);
+      RuleEngine.dump_rule(r2);
     }
     for(var i=0;i < r1.args.length; i++) {
       if(RuleEngine.getTypeName(r1.args[i]) == 'Term') {
@@ -201,11 +221,25 @@ class RuleEngine {
         if(is_debug) {
           console.log("_dbg unifying " + r2.args[i].name + " with " + r1.args[i].name);
           console.log("_dbg r1.args[i].grounded type: " + RuleEngine.getTypeName(r1.args[i].grounded));
-	  if(r2.args[i].name == 'HDX') {
+          RuleEngine.dump_term_alias_chain(r1.args[i]);
+	  if(r2.args[i].name == 'X1') {
+            var bq_hd_arg = RuleEngine.base_query.args[0];
+	    console.log("\n_dbg dumping base query arg name: " + bq_hd_arg.name);
+
+            if(RuleEngine.is_term_in_alias_chain(r1.args[i], bq_hd_arg)) {
+              console.log("_dbg 2 term: " + r1.args[i].name + " is in alias chain of base query arg: " + bq_hd_arg.name);
+            } else {
+              console.log("_dbg 2 term: " + r1.args[i].name + " is not in alias chain of base query arg: " + bq_hd_arg.name);
+            }
+
+            if(RuleEngine.is_term_in_alias_chain(r2.args[i], bq_hd_arg)) {
+              console.log("_dbg term: " + r2.args[i].name + " is in alias chain of base query arg: " + bq_hd_arg.name);
+            } else {
+              console.log("_dbg term: " + r2.args[i].name + " is not in alias chain of base query arg: " + bq_hd_arg.name);
+            }
+
+            RuleEngine.dump_term_alias_chain(bq_hd_arg);
 	    console.log("_dbg r1.args[i].getGrounded: " + r1.args[i].getGrounded());
-	    var bq_hd_arg = RuleEngine.base_query.args[1];
-	    console.log("_dbg bq_hd_arg name: " + bq_hd_arg.name);
-	    console.log("_dbg bq_hd_arg value: " + bq_hd_arg.getGrounded());
 	  }
         }
       } else if(RuleEngine.getTypeName(r2.args[i]) == 'Term') {
@@ -230,12 +264,51 @@ class RuleEngine {
     }
   }
 
-  public prepareToFire(query: Rule, rule: Rule) {
+  public check_copy_args_link_to_base_args(rule_copy: Rule) {
+    var bq_args =  RuleEngine.base_query.args;
+    for(var i=0; i < bq_args.length; i++) {
+      for(var j=0; j < rule_copy.args.length; j++) {
+        if(RuleEngine.is_term_in_alias_chain(rule_copy.args[j], bq_args[i])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  public prepareToFire(query: Rule, rule: Rule, is_body_rule: bool) {
     if(is_debug) {
       console.log("_dbg in prepareToFire");
+      var rule_check = query;
+      if(is_body_rule) {
+        rule_check = RuleEngine.rule_firing;
+      }
+
+      if(!this.check_copy_args_link_to_base_args(rule_check)) {
+	console.log("_dbg 4 rule: " + rule_check.name + " args not found in alias chain of base query args!");
+      } else {
+	console.log("_dbg 4 rule: " + rule_check.name + " args found in alias chain of base query args!");
+
+      }
+
     }
     var rule_copy = rule.deepcopy();
-    this.unifyRuleHeaders(query, rule_copy);
+    if(!is_body_rule) {
+      this.unifyRuleHeaders(query, rule_copy);
+    } else {
+      this.unifyRuleHeaders(query, rule_copy);
+      //var header = RuleEngine.rule_firing;
+      //this.unifyHeaderArgsToBodyCallArgs(header, rule_copy);
+    }
+
+    if(is_debug) {
+      if(!this.check_copy_args_link_to_base_args(rule_copy)) {
+	console.log("_dbg 3 rule_copy args not found in alias chain of base query args!");
+      } else {
+	console.log("_dbg 3 rule_copy args found in alias chain of base query args!");
+
+      }
+    }
 
     return rule_copy;
   }
@@ -358,11 +431,16 @@ class RuleEngine {
       }
       arg.unify(n[1]);
       if(is_debug) {
+        RuleEngine.dump_term_alias_chain(arg);
+        var bq_hd_arg = RuleEngine.base_query.args[0];
+        RuleEngine.dump_term_alias_chain(bq_hd_arg);
+        /*
         if(arg.name == 'HDX') {
           var bq_hd_arg = RuleEngine.base_query.args[1];
           console.log("_dbg bq_hd_arg name: " + bq_hd_arg.name);
           console.log("_dbg bq_hd_arg value: " + bq_hd_arg.getGrounded());
         }
+        */
       }
     } else if(bodyRule.name.indexOf('!') > -1) {
       console.log("_dbg executing cut, emptying choice points");
@@ -392,9 +470,9 @@ class RuleEngine {
     this.handleNonCallAsync(is_fail);
   }
 
-  public prepareToCall(call_rule: Rule) {
+  public prepareToCall(call_rule: Rule, is_body_rule: bool = false) {
     if(is_debug) {
-      console.log("_dbg processing rule name: "+ call_rule.name +" as a call");
+      console.log("_dbg processing rule name: "+ call_rule.name +" in prepareToCall");
     }
     var foundRules = this.searchRules(RuleEngine.rules, call_rule.name, call_rule.args); 
     if(is_debug) {
@@ -405,7 +483,7 @@ class RuleEngine {
       if(is_debug) {
         console.log("_dbg foundRules[0].rules.length: " + foundRules[0].rules.length);
       }
-      var rule_copy = this.prepareToFire(call_rule, foundRules[0]);
+      var rule_copy = this.prepareToFire(call_rule, foundRules[0], is_body_rule);
       return rule_copy;
     }
 
@@ -462,7 +540,8 @@ class RuleEngine {
         return;
       }
       if(!bodyRule.is_non_call()) {
-        var rule_copy = this.prepareToCall(bodyRule);
+        var is_body_rule = true;
+        var rule_copy = this.prepareToCall(bodyRule, is_body_rule);
         this.fireRule(rule_copy);
       } else {
         if(is_debug) {
@@ -518,13 +597,85 @@ class RuleEngine {
       this.addBodyRule(bodyRule);
     }
 
+    RuleEngine.dump_body_rules();
+
     this.popBodyRule();
+    if(is_debug) {
+      console.log("_dbg current rule firing: " + RuleEngine.rule_firing.name);
+      if(RuleEngine.body_rule_firing) {
+        console.log("_dbg body rule processing after popBodyRule: " + RuleEngine.body_rule_firing.name);
+      }
+    }
 
     this.handleBodyRule();
     if(is_debug) {
       console.log("_dbg after handleBodyRule in fireRule");
     }
     //this.handleBaseQueryFinish();
+  }
+
+  public static is_term_in_alias_chain(needle: Term, haystack: Term) {
+    var done = false;
+    var found = false;
+    while(!done) {
+      if(needle == haystack) {
+        found = true;
+        done = true;
+      }
+
+      if(RuleEngine.getTypeName(haystack.grounded) != 'Term' || haystack.isFree()) {
+        done = true;
+      } else {
+        haystack = haystack.grounded;
+      }
+    }
+
+    return found;
+  }
+
+  public static dump_term_alias_chain(t: Term) {
+    if(RuleEngine.getTypeName(t.grounded) != 'Term') {
+      console.log("_dbg t.name: " +  t.name + " is bound to value" + t.grounded);
+      return;
+    }
+    console.log("_dbg dumping alias chain:");
+    console.log("_dbg t.name: " + t.name);   
+    if(t.isFree()) {
+      console.log("_dbg t.name: " +  t.name + " is free");
+      return;
+    }
+
+    if(t.isBoundorAliased()) {
+      if(RuleEngine.getTypeName(t.grounded) == 'Term') {
+        console.log("_dbg t.name: " +  t.name + " is aliased to " + t.grounded.name);
+        RuleEngine.dump_term_alias_chain(t.grounded);
+      } else {
+        console.log("_dbg t.name: " +  t.name + " is bound to value" + t.grounded);
+
+      }
+    }
+  }
+
+  public static dump_rule(r1: Rule) {
+      console.log("_dbg rule name: " + r1.name);
+      if(r1.args.length > 0) {
+        for(var i=0;i < r1.args.length; i++) {
+          console.log("_dbg   args[" + i + "]: " + r1.args[i].name);
+        }
+      } else {
+        console.log("_dbg   has no args");
+      }
+  }
+
+  public static dump_body_rules() {
+    if(is_debug) {
+      console.log("_dbg dumping body rules");
+      for (var i=0; i < RuleEngine.body_rules.length; i++) {
+        var bodyRule = RuleEngine.body_rules[i];
+        console.log("_dbg position: " + i + " bodyRule name: " + bodyRule.name); 
+      }
+    }
+
   }
 
   public isQuerySolved(r_args: any[]) {
