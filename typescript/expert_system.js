@@ -25,8 +25,10 @@ function setup_re() {
   re.addRule(small_ram_rule);
 
   var small_hd_term = new Term('HDX');
+  var chosen_ram_term = new Term('RAMX');
   var small_hd_rule = new Rule('choose_hd');
   small_hd_rule.addArg(small_hd_term);
+  small_hd_rule.addArg(chosen_ram_term);
 
 
   var small_hd_o1 = new Rule('o(Do you want a small HD?)');
@@ -103,6 +105,7 @@ function setup_re() {
 
   var b_hd = new Rule('choose_hd');
   b_hd.addArg(term_hd);
+  b_hd.addArg(term_ram);
 
   q_ram_hd.addRule(b_ram);
   q_ram_hd.addRule(b_hd);

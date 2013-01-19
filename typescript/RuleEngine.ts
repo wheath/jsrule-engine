@@ -81,8 +81,8 @@ class RuleEngine {
   public addRule(rule: Rule) {
     //console.log("_dbg adding rule with name: " + rule.name);
     //console.log("_dbg num rules: " + rule.rules.length);
-    //this.rules.push(rule);
-    RuleEngine.rules.unshift(rule);
+    RuleEngine.rules.push(rule);
+    //RuleEngine.rules.unshift(rule);
   }
 
   public static getTypeName(inst: any) {
@@ -135,7 +135,15 @@ class RuleEngine {
     }
 
     if(found_choice) {
+      RuleEngine.body_rules = found_choice.body_rules;
       var rule_copy = this.prepareToFire(found_choice.query, found_choice.rule, false);
+      if(is_debug) {
+	if(!this.check_copy_args_link_to_base_args(rule_copy)) {
+	  console.log("_dbg 6 rule_copy: " + rule_copy.name + " args not found in alias chain of base query args after unifying with query: " + found_choice.query.name);
+	} else {
+	  console.log("_dbg 6 rule_copy: " + rule_copy.name + " args found in alias chain of base query args after unifying with query: " + found_choice.query.name);
+	}
+      }
       this.fireRule(rule_copy);
     } else {
       if(is_debug) {
@@ -188,18 +196,26 @@ class RuleEngine {
     return foundRules;
   }
 
-  public unifyHeaderArgsToBodyCallArgs(header: Rule, body_rule: Rule) {
-    if(is_debug) {
-      console.log("_dbg in unifyHeaderArgsToBodyCallArgs h: " + header.name + " b: " + body_rule.name);
-    }
-    for(var i=0;i < body_rule.args.length; i++) {
-      for(var j=0;j < header.args.length; j++) {
-        if(is_debug) {
-          console.log("_dbg cmp b arg name: " + body_rule.args[i].name + " with  header arg name" + header.args[j].name);
-        }
-        if(body_rule.args[i].name == header.args[j].name) {
-          header.args[j].unify(body_rule.args[i]);
-        }
+  public unifyHeaderArgsToBodyCallArgs(rule: Rule) {
+    var header = rule;
+    var body_rules = rule.rules;
+
+
+
+    for(var i=0;i < header.args.length; i++) {
+      for(var k=0;k < body_rules.length; k++) {
+        var body_rule = body_rules[k];
+	if(is_debug) {
+	  console.log("_dbg in unifyHeaderArgsToBodyCallArgs h: " + header.name + " b: " + body_rule.name);
+	}
+	for(var j=0;j < body_rule.args.length; j++) {
+	  if(is_debug) {
+	    console.log("_dbg cmp b arg name: " + body_rule.args[j].name + " with  header arg name" + header.args[i].name);
+	  }
+	  if(body_rule.args[j].name == header.args[i].name) {
+	    body_rule.args[j] = header.args[i];
+	  }
+	}
       }
     }
   }
@@ -257,9 +273,28 @@ class RuleEngine {
     }
   }
 
+
   public handleFoundRules(query: Rule, foundRules: Rule[]) {
+    if(is_debug) {
+      console.log("_dbg in handleFoundRules");
+      console.log("_dbg # RuleEngine.body_rules: " + RuleEngine.body_rules.length);
+      if(!this.check_copy_args_link_to_base_args(query)) {
+	console.log("_dbg 5 rule: " + query.name + " args not found in alias chain of base query args!");
+      } else {
+	console.log("_dbg 5 rule: " + query.name + " args found in alias chain of base query args!");
+
+      }
+    }
+
+    var body_rules_copy = [];
+    
+    for(var i=0; i <RuleEngine.body_rules.length;i++) {
+      body_rules_copy.unshift(RuleEngine.body_rules[i]);
+    }
+    
+
     for(var i=1; i <foundRules.length;i++) {
-      var choice = new Choice(query, foundRules[i]);
+      var choice = new Choice(query, foundRules[i], body_rules_copy);
       RuleEngine.choices.push(choice);
     }
   }
@@ -279,10 +314,13 @@ class RuleEngine {
   public prepareToFire(query: Rule, rule: Rule, is_body_rule: bool) {
     if(is_debug) {
       console.log("_dbg in prepareToFire");
+      //var rule_check = query;
       var rule_check = query;
+      /*
       if(is_body_rule) {
         rule_check = RuleEngine.rule_firing;
       }
+      */
 
       if(!this.check_copy_args_link_to_base_args(rule_check)) {
 	console.log("_dbg 4 rule: " + rule_check.name + " args not found in alias chain of base query args!");
@@ -293,6 +331,9 @@ class RuleEngine {
 
     }
     var rule_copy = rule.deepcopy();
+    if(rule_copy.rules.length > 0) {
+      this.unifyHeaderArgsToBodyCallArgs(rule_copy);
+    }
     if(!is_body_rule) {
       this.unifyRuleHeaders(query, rule_copy);
     } else {
@@ -303,10 +344,9 @@ class RuleEngine {
 
     if(is_debug) {
       if(!this.check_copy_args_link_to_base_args(rule_copy)) {
-	console.log("_dbg 3 rule_copy args not found in alias chain of base query args!");
+	console.log("_dbg 3 rule_copy: " + rule_copy.name + " args not found in alias chain of base query args after unifying with query: " + query.name);
       } else {
-	console.log("_dbg 3 rule_copy args found in alias chain of base query args!");
-
+	console.log("_dbg 3 rule_copy: " + rule_copy.name + " args found in alias chain of base query args after unifying with query: " + query.name);
       }
     }
 
@@ -665,6 +705,13 @@ class RuleEngine {
       } else {
         console.log("_dbg   has no args");
       }
+
+      if(r1.rules.length > 0) {
+
+      } else {
+        console.log("_dbg   has no body rules");
+      }
+     
   }
 
   public static dump_body_rules() {
@@ -673,6 +720,29 @@ class RuleEngine {
       for (var i=0; i < RuleEngine.body_rules.length; i++) {
         var bodyRule = RuleEngine.body_rules[i];
         console.log("_dbg position: " + i + " bodyRule name: " + bodyRule.name); 
+      }
+    }
+
+  }
+
+  public static dump_choices() {
+    if(is_debug) {
+      console.log("_dbg dumping choices");
+      for (var i=0; i < RuleEngine.choices.length; i++) {
+        var choice = RuleEngine.choices[i];
+        if(RuleEngine.getTypeName(choice) == 'Choice') {
+          console.log("_dbg position: " + i + " query name: " + choice.query.name + " rule name: " + choice.rule.name + " type: " + RuleEngine.getTypeName(choice)); 
+          RuleEngine.dump_rule(choice.query);
+          RuleEngine.dump_rule(choice.rule);
+          console.log("_dbg choice.body_rules: ");
+	  for (var l=0; l < choice.body_rules.length; l++) {
+	    var bodyRule = choice.body_rules[l];
+	    console.log("_dbg position: " + l + " bodyRule name: " + bodyRule.name); 
+	  }
+
+        } else {
+          console.log("_dbg position: " + i + " choice name: " + choice.name + " type: " + RuleEngine.getTypeName(choice)); 
+        }
       }
     }
 
@@ -738,6 +808,7 @@ class RuleEngine {
       output_ar.push('There are other possible solutions, should the solver continue?\n');
       Util.output(output_ar.join(''));
       output_ar = [];
+      RuleEngine.dump_choices();
       if(RuleEngine.more_solutions_prompt == true) {
         Util.input(this.handleFindMoreSolutions);
       }
