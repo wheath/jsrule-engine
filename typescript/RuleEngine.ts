@@ -277,6 +277,7 @@ class RuleEngine {
   public handleFoundRules(query: Rule, foundRules: Rule[]) {
     if(is_debug) {
       console.log("_dbg in handleFoundRules");
+      console.log("_dbg # foundRules: " + foundRules.length);
       console.log("_dbg # RuleEngine.body_rules: " + RuleEngine.body_rules.length);
       if(!this.check_copy_args_link_to_base_args(query)) {
 	console.log("_dbg 5 rule: " + query.name + " args not found in alias chain of base query args!");
@@ -286,14 +287,15 @@ class RuleEngine {
       }
     }
 
-    var body_rules_copy = [];
-    
-    for(var i=0; i <RuleEngine.body_rules.length;i++) {
-      body_rules_copy.unshift(RuleEngine.body_rules[i]);
-    }
     
 
     for(var i=1; i <foundRules.length;i++) {
+      var body_rules_copy = [];
+      
+      for(var j=0; j <RuleEngine.body_rules.length;j++) {
+	body_rules_copy.unshift(RuleEngine.body_rules[j]);
+      }
+
       var choice = new Choice(query, foundRules[i], body_rules_copy);
       RuleEngine.choices.push(choice);
     }
