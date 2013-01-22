@@ -21,8 +21,8 @@ function setup_re() {
   var small_X = new Rule('X=small');
   re.addRule(small_X);
   small_ram_rule.addRule(small_X);
-
   re.addRule(small_ram_rule);
+
 
   var small_hd_term = new Term('HDX');
   var chosen_ram_term = new Term('RAMX');

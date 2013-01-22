@@ -115,6 +115,7 @@ class RuleEngine {
     if(is_debug) {
       console.log("_dbg in backTrack");
       console.log("_dbg RuleEngine.choices.length: " + RuleEngine.choices.length);
+      RuleEngine.dump_choices();
     }
 
     while(!is_backTracked) {
@@ -202,12 +203,12 @@ class RuleEngine {
 
 
 
-    for(var i=0;i < header.args.length; i++) {
-      for(var k=0;k < body_rules.length; k++) {
+    for(var k=0;k < body_rules.length; k++) {
         var body_rule = body_rules[k];
 	if(is_debug) {
 	  console.log("_dbg in unifyHeaderArgsToBodyCallArgs h: " + header.name + " b: " + body_rule.name);
 	}
+      for(var i=0;i < header.args.length; i++) {
 	for(var j=0;j < body_rule.args.length; j++) {
 	  if(is_debug) {
 	    console.log("_dbg cmp b arg name: " + body_rule.args[j].name + " with  header arg name" + header.args[i].name);
@@ -291,9 +292,13 @@ class RuleEngine {
       }
     }
 
-    
+   
+    if(is_debug) {
+      console.log("_dbg choices before adding: ");
+      RuleEngine.dump_choices();
+    }
 
-    for(var i=1; i <foundRules.length;i++) {
+    for(var i=foundRules.length-1; i >0;i--) {
       var body_rules_copy = [];
       
       for(var j=0; j <RuleEngine.body_rules.length;j++) {
@@ -301,7 +306,16 @@ class RuleEngine {
       }
 
       var choice = new Choice(query, foundRules[i], body_rules_copy);
+      if(is_debug) {
+        console.log("_dbg adding choice: " + foundRules[i].name);
+      }
       RuleEngine.choices.push(choice);
+      //RuleEngine.choices.unshift(choice);
+    }
+
+    if(is_debug) {
+      console.log("_dbg choices after adding: ");
+      RuleEngine.dump_choices();
     }
   }
 
@@ -708,6 +722,7 @@ class RuleEngine {
   }
 
   public static dump_term_alias_chain(t: Term) {
+    return;
     if(RuleEngine.getTypeName(t.grounded) != 'Term') {
       console.log("_dbg t.name: " +  t.name + " is bound to value" + t.grounded);
       return;
@@ -766,8 +781,8 @@ class RuleEngine {
         var choice = RuleEngine.choices[i];
         if(RuleEngine.getTypeName(choice) == 'Choice') {
           console.log("_dbg position: " + i + " query name: " + choice.query.name + " rule name: " + choice.rule.name + " type: " + RuleEngine.getTypeName(choice)); 
-          RuleEngine.dump_rule(choice.query);
-          RuleEngine.dump_rule(choice.rule);
+          //RuleEngine.dump_rule(choice.query);
+          //RuleEngine.dump_rule(choice.rule);
           console.log("_dbg choice.body_rules: ");
 	  for (var l=0; l < choice.body_rules.length; l++) {
 	    var bodyRule = choice.body_rules[l];
