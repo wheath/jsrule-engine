@@ -30,6 +30,9 @@ function setup_re() {
   small_hd_rule.addArg(small_hd_term);
   small_hd_rule.addArg(chosen_ram_term);
 
+  var small_ram_constraint = new Rule('RAMX==small');
+  re.addRule(small_ram_constraint);
+  small_hd_rule.addRule(small_ram_constraint);
 
   var small_hd_o1 = new Rule('o(Do you want a small HD?)');
   re.addRule(small_hd_o1);
@@ -48,6 +51,32 @@ function setup_re() {
   small_hd_rule.addRule(small_hdX);
 
   re.addRule(small_hd_rule);
+
+  var med_hd_rule = new Rule('choose_hd');
+  med_hd_rule.addArg(small_hd_term);
+  med_hd_rule.addArg(chosen_ram_term);
+
+  var med_ram_constraint = new Rule('RAMX==medium');
+  re.addRule(med_ram_constraint);
+  med_hd_rule.addRule(med_ram_constraint);
+
+  var med_hd_o1 = new Rule('o(Do you want a medium HD?)');
+  re.addRule(med_hd_o1);
+  med_hd_rule.addRule(med_hd_o1);
+
+  var med_hd_i1 = new Rule('i(HDY)');
+  re.addRule(med_hd_i1);
+  med_hd_rule.addRule(med_hd_i1);
+
+  var med_hd_i1_eq_yes = new Rule('HDY==yes');
+  re.addRule(med_hd_i1_eq_yes);
+  med_hd_rule.addRule(med_hd_i1_eq_yes);
+
+  var med_hdX = new Rule('HDX=medium');
+  re.addRule(med_hdX);
+  med_hd_rule.addRule(med_hdX);
+
+  re.addRule(med_hd_rule);
 
   var med_ram_term = new Term('X');
   var med_ram_rule = new Rule('choose_ram');

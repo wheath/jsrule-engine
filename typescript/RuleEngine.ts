@@ -229,9 +229,9 @@ class RuleEngine {
       RuleEngine.dump_rule(r2);
     }
     for(var i=0;i < r1.args.length; i++) {
-      if(RuleEngine.getTypeName(r1.args[i]) == 'Term') {
+      if(RuleEngine.getTypeName(r1.args[i]) == 'Term' && !r1.args[i].isGrounded()) {
         if(is_debug) {
-          console.log("_dbg calling unify on r1");
+          console.log("_dbg calling unify on arg: " + r1.args[i].name + " v: " + r1.args[i].getGrounded() + " with arg: " + r2.args[i].name + " v: " + r2.args[i].getGrounded());
         }
         r1.args[i].unify(r2.args[i]);
         if(is_debug) {
@@ -258,7 +258,7 @@ class RuleEngine {
 	    console.log("_dbg r1.args[i].getGrounded: " + r1.args[i].getGrounded());
 	  }
         }
-      } else if(RuleEngine.getTypeName(r2.args[i]) == 'Term') {
+      } else if(RuleEngine.getTypeName(r2.args[i]) == 'Term' && !r2.args[i].isGrounded()) {
         if(is_debug) {
           console.log("_dbg calling unify on r2");
         }
@@ -266,6 +266,10 @@ class RuleEngine {
           console.log("_dbg unifying " + r1.args[i].name + " with " + r2.args[i].name);
         }
         r2.args[i].unify(r1.args[i]);
+      }
+
+      if((RuleEngine.getTypeName(r2.args[i]) == 'Term' && r2.args[i].isGrounded())  && (RuleEngine.getTypeName(r2.args[i]) == 'Term' && !r2.args[i].isGrounded()) ) {
+        throw "cannot unify two grounded header args";   
       }
     }
     if(is_debug) {
@@ -336,6 +340,13 @@ class RuleEngine {
     if(rule_copy.rules.length > 0) {
       this.unifyHeaderArgsToBodyCallArgs(rule_copy);
     }
+    if(is_debug) {
+      if(query.name == 'choose_hd') {
+        console.log("_dbg choose_hd call: ");
+        RuleEngine.dump_rule(query);
+      }
+
+    }
     if(!is_body_rule) {
       this.unifyRuleHeaders(query, rule_copy);
     } else {
@@ -345,11 +356,27 @@ class RuleEngine {
     }
 
     if(is_debug) {
+      if(query.name == 'choose_hd') {
+        console.log("_dbg choose_hd call after unifyRuleHeaders: ");
+        RuleEngine.dump_rule(rule_copy);
+      }
+
+    }
+
+    if(is_debug) {
       if(!this.check_copy_args_link_to_base_args(rule_copy)) {
 	console.log("_dbg 3 rule_copy: " + rule_copy.name + " args not found in alias chain of base query args after unifying with query: " + query.name);
       } else {
 	console.log("_dbg 3 rule_copy: " + rule_copy.name + " args found in alias chain of base query args after unifying with query: " + query.name);
       }
+    }
+
+    if(is_debug) {
+      if(query.name == 'choose_hd') {
+        console.log("_dbg choose_hd rule after unifying header and body args: ");
+        RuleEngine.dump_rule(rule_copy);
+      }
+
     }
 
     return rule_copy;
@@ -515,6 +542,7 @@ class RuleEngine {
   public prepareToCall(call_rule: Rule, is_body_rule: bool = false) {
     if(is_debug) {
       console.log("_dbg processing rule name: "+ call_rule.name +" in prepareToCall");
+      RuleEngine.dump_rule(call_rule);
     }
     var foundRules = this.searchRules(RuleEngine.rules, call_rule.name, call_rule.args); 
     if(is_debug) {
@@ -526,6 +554,10 @@ class RuleEngine {
         console.log("_dbg foundRules[0].rules.length: " + foundRules[0].rules.length);
       }
       var rule_copy = this.prepareToFire(call_rule, foundRules[0], is_body_rule);
+      if(is_debug) {
+        console.log("_dbg copy of rule name: " + call_rule.name);
+        RuleEngine.dump_rule(rule_copy);
+      }
       return rule_copy;
     }
 
@@ -702,7 +734,7 @@ class RuleEngine {
       console.log("_dbg rule name: " + r1.name);
       if(r1.args.length > 0) {
         for(var i=0;i < r1.args.length; i++) {
-          console.log("_dbg   args[" + i + "]: " + r1.args[i].name);
+          console.log("_dbg   args[" + i + "]: " + r1.args[i].name + " value: " + r1.args[i].getGrounded());
         }
       } else {
         console.log("_dbg   has no args");
