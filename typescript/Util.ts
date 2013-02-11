@@ -65,4 +65,118 @@ class Util {
     //return input_str;
   }
 
+  public static add_qa_bool_rule() {
+    var re = RuleEngine.getREInst();
+    var qa_bool_rule = new Rule('qa_bool');
+    var qa_question_term = new Term('Q');
+    var qa_answer_term = new Term('BOOL_A');
+    qa_bool_rule.addArg(qa_question_term);
+    qa_bool_rule.addArg(qa_answer_term);
+    re.addRule(qa_bool_rule);
+
+    var qa_rule_o1 = new Rule('ov(Q)');
+    re.addRule(qa_rule_o1);
+    qa_bool_rule.addRule(qa_rule_o1);
+
+    var qa_rule_i1 = new Rule('i(BOOL_A)');
+    re.addRule(qa_rule_i1);
+    qa_bool_rule.addRule(qa_rule_i1);
+  }
+
+
+  public static handle_binary_input(document) {
+    console.log("_dbg in handle_binary_input");
+    var oRadio = document.forms[0].elements['binary_input'];
+    var radio_val = '';
+   
+     for(var i = 0; i < oRadio.length; i++)
+     {
+	if(oRadio[i].checked)
+	{
+	   radio_val = oRadio[i].value;
+	}
+     }
+
+     console.log("_dbg radio_val: " + radio_val);
+     var input_div = document.getElementById("input_div");
+     input_div.style.display = "none";
+     RuleEngine.input_cb(radio_val);
+  }
+
+  //gen_rules_from_qa table
+
+  public static create_rule_from_qa_table(input_rule_name, input_rulehdr_args,  
+				   qa_t, call_rule_name) {
+
+    var qa_input_rule = create_rule_header(input_rule_name, input_rulehdr_args);
+    var call_rule_args = []; 
+    for(var i=0; i < qa_t.length; i++) {
+      var qa_info = qa_t[i];
+      qa_input_rule.rules.push(new Rule('o(' + qa_info[0] + ')'));
+      if(qa_info[1] == 'yes_no') {
+	qa_input_rule.rules.push(new Rule('i(' + qa_info[2] + ')'));
+	call_rule_args.push(new Term(qa_info[2]));
+      }
+    }
+
+    //TODO: assumes last arg is not grounded and should be passed etc...
+    //this may not always be true.  Not sure why a new Term is necesary but if
+    //not it gets into an infinite loop
+    for(var i=0; i < input_rulehdr_args.length; i++) {
+      call_rule_args.push(new Term(input_rulehdr_args[i].name));
+    }
+
+    var call_rule = create_rule_header(call_rule_name, call_rule_args);
+    //console.log("_dbg call_rule_args.length: " + call_rule_args.length);
+    //console.log("_dbg last call_rule_args name: " + call_rule_args[call_rule_args.length-1].name);
+    qa_input_rule.rules.push(call_rule);
+
+    return qa_input_rule;
+  } 
+
+
+  //truth table function to quickly generate rules from simple arrays
+
+  public static gen_rules_from_truth_table(rule_name, header_args, tt) {
+    var generated_rules = [];
+    for(var i=0; i < tt.length; i++) {
+      var rule = create_rule_header(rule_name, header_args);
+      var body_tt_row = tt[i];
+      for(var j=0; j < body_tt_row.length; j++) {
+	if(body_tt_row[j] === undefined) {
+	  continue;
+	}
+	if(j == body_tt_row.length-2) {
+	  if(body_tt_row[j]!==undefined) { 
+	    rule.addRule(new Rule(header_args[j].name + '=' + body_tt_row[j]));
+	  }
+	} else if(j==body_tt_row.length-1) {
+	  if(Object.prototype.toString.call(body_tt_row[j]) == "[object Array]") {
+	    var suffix_rules = body_tt_row[j];
+	    for(var k=0; k < suffix_rules.length; k++) {
+	      rule.addRule(suffix_rules[k]);  
+	    }
+	  } 
+	} else {
+	  rule.addRule(new Rule(header_args[j].name + '==' + body_tt_row[j]));
+	}
+      }
+      generated_rules.push(rule); 
+    }
+    return generated_rules;
+  }
+
+
+
+  //utility function to help with disjunction approximation via backtracking
+
+  public static create_rule_header(rule_name, header_args) {
+    var new_rule = new Rule(rule_name);
+    for(var i=0; i < header_args.length;i++) {
+      new_rule.addArg(header_args[i]);
+    }
+
+    return new_rule;
+  }
+
 }

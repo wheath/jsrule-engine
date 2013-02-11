@@ -82,6 +82,23 @@ class RuleEngine {
     //console.log("_dbg adding rule with name: " + rule.name);
     //console.log("_dbg num rules: " + rule.rules.length);
     RuleEngine.rules.push(rule);
+
+    //push body rules
+    for(var i=0; i < rule.rules.length;i++) {
+      if(!rule.is_query()) {
+        //avoid duplicating rules so set rules already known to their reference
+        //instead of adding a duplicate
+	var foundRules = this.searchRules(RuleEngine.rules, rule.name, rule.args);    
+        if(foundRules.length == 1) {
+          for(var j=0; j < foundRules.length;j++) {
+	    var found_bodyRule = foundRules[j];
+	    if(found_bodyRule.is_non_call()) {
+              rule.rules[i] = found_bodyRule;
+	    }
+          }
+        }
+      }
+    }
     //RuleEngine.rules.unshift(rule);
   }
 
@@ -197,6 +214,23 @@ class RuleEngine {
     return foundRules;
   }
 
+  public unifyHeaderBodyArgsToQueryArgs(query: Rule) {
+    if(is_debug) {
+      console.log("_dbg in unifyHeaderBodyArgsToQueryArgs");
+    }
+    var header = RuleEngine.rule_firing;
+    for(var i=0;i < header.b_args.length; i++) {
+      for(var j=0;j < query.args.length; j++) {
+	if(is_debug) {
+	  console.log("_dbg cmp b arg name: " + query.args[j].name + " with  header arg name" + header.b_args[i].name);
+	}
+	if(query.args[j].name == header.b_args[i].name) {
+	  query.args[j] = header.b_args[i];
+	}
+      }
+    }
+  }
+
   public unifyHeaderArgsToBodyCallArgs(rule: Rule) {
     var header = rule;
     var body_rules = rule.rules;
@@ -302,7 +336,7 @@ class RuleEngine {
       var body_rules_copy = [];
       
       for(var j=0; j <RuleEngine.body_rules.length;j++) {
-	body_rules_copy.unshift(RuleEngine.body_rules[j]);
+	body_rules_copy.unshift(RuleEngine.body_rules[j].deepcopy());
       }
 
       var choice = new Choice(query, foundRules[i], body_rules_copy);
@@ -364,6 +398,13 @@ class RuleEngine {
     if(!is_body_rule) {
       this.unifyRuleHeaders(query, rule_copy);
     } else {
+      RuleEngine.rule_firing.is_context_change = true;
+      if(is_debug) {
+        console.log("_dbg adding RuleEngine.rule_firing.is_context_change = true: " + RuleEngine.rule_firing.name);
+      }
+      this.addBodyRule(RuleEngine.rule_firing);
+      this.addHeaderBodyArgs(query);
+      this.unifyHeaderBodyArgsToQueryArgs(query);
       this.unifyRuleHeaders(query, rule_copy);
       //var header = RuleEngine.rule_firing;
       //this.unifyHeaderArgsToBodyCallArgs(header, rule_copy);
@@ -404,7 +445,17 @@ class RuleEngine {
         console.log("_dbg RuleEngine.body_rules.length: " + RuleEngine.body_rules.length);
       }
 
-      RuleEngine.body_rule_firing = RuleEngine.body_rules.pop();
+      var popped_body_rule = RuleEngine.body_rules.pop();
+      if(popped_body_rule && popped_body_rule.is_context_change) {
+        if(is_debug) {
+          console.log("_dbg context change to RuleEngine.rule_firing: " + popped_body_rule.name);
+        }
+        //popped_body_rule.is_context_change = false;
+        RuleEngine.rule_firing = popped_body_rule;
+        this.popBodyRule();
+      } else {
+        RuleEngine.body_rule_firing = popped_body_rule;
+      }
     }
   }
 
@@ -460,6 +511,31 @@ class RuleEngine {
 
   }
 
+  public addHeaderBodyArgs(call_rule:Rule) {
+    if(is_debug) {
+      console.log("_dbg in addHeaderBodyArgs");
+    }
+    var header = RuleEngine.rule_firing;
+
+    for(var i=0;i < call_rule.args.length; i++) {
+      var arg = RuleEngine.findArg(call_rule.args[i].name, header.args);
+      if(!arg) {
+	if(is_debug) {
+	  //console.log("_dbg header.b_args: "+ JSON.stringify(header.b_args) +"\n");
+	}
+	arg = RuleEngine.findArg(call_rule.args[i].name, header.b_args);
+      }
+      if(!arg) {
+	if(is_debug) {
+	  console.log("_dbg adding term to header body args: " + call_rule.args[i].name);
+	}
+	arg = new Term(call_rule.args[i].name);
+	header.addBarg(arg);
+      }
+    }
+
+  }
+
   public handleNonCallBodyRule(header:Rule, bodyRule: Rule) {
     if(is_debug) {
       console.log("_dbg in handleNonCallBodyRule\n");
@@ -472,9 +548,9 @@ class RuleEngine {
         console.log("_dbg n: "+ JSON.stringify(n) +"\n");
         console.log("_dbg num header args: "+ header.args.length +"\n");
         console.log("_dbg num header b_args: "+ header.b_args.length +"\n");
-      }   
       
-      //console.log("_dbg header.args: "+ JSON.stringify(header.args) +"\n");
+        //console.log("_dbg header.args: "+ JSON.stringify(header.args) +"\n");
+      }   
       var arg = RuleEngine.findArg(n[0], header.args);
       if(!arg) {
         if(is_debug) {
@@ -525,7 +601,7 @@ class RuleEngine {
         }
         */
       }
-    } else if(bodyRule.name.indexOf('!') > -1) {
+    } else if(bodyRule.name == '!') {
       console.log("_dbg executing cut, emptying choice points");
       RuleEngine.choices = [];
     } else if(bodyRule.name.indexOf('fail') > -1) {
@@ -544,6 +620,20 @@ class RuleEngine {
       }
 
       Util.input(this.handleAsyncInput);
+    } else if(bodyRule.name.indexOf('ov(') > -1) {
+      if(is_debug) {
+        console.log("_dbg in ov body rule");
+      }
+      var r = /^ov\((.*)\)/;
+      var arg_name = bodyRule.name.match(r)[1];
+      if(is_debug) {
+        console.log("_dbg arg_name: " + arg_name);
+      }
+      var arg = RuleEngine.findArg(arg_name, header.args);
+      if(!arg) {
+        arg = RuleEngine.findArg(arg_name, header.b_args);
+      }
+      Util.output(arg.getGrounded());
     }
 
     if(is_debug) {
@@ -557,7 +647,10 @@ class RuleEngine {
     if(is_debug) {
       console.log("_dbg processing rule name: "+ call_rule.name +" in prepareToCall");
       RuleEngine.dump_rule(call_rule);
+      console.log("_dbg   RuleEngine.rule_firing.name: " + RuleEngine.rule_firing.name);
     }
+
+    this.addHeaderBodyArgs(call_rule);
     var foundRules = this.searchRules(RuleEngine.rules, call_rule.name, call_rule.args); 
     if(is_debug) {
       console.log("_dbg num rules found: " + foundRules.length + "\n");
@@ -685,7 +778,10 @@ class RuleEngine {
       this.addBodyRule(bodyRule);
     }
 
-    RuleEngine.dump_body_rules();
+    if(is_debug) {
+      console.log("_dbg added all body rules of rule: " + bodyRule.name);
+      RuleEngine.dump_body_rules();
+    }
 
     this.popBodyRule();
     if(is_debug) {
@@ -768,7 +864,7 @@ class RuleEngine {
       console.log("_dbg dumping body rules");
       for (var i=0; i < RuleEngine.body_rules.length; i++) {
         var bodyRule = RuleEngine.body_rules[i];
-        console.log("_dbg position: " + i + " bodyRule name: " + bodyRule.name); 
+        console.log("_dbg position: " + i + " bodyRule name: " + bodyRule.name + " is_context_change: " + bodyRule.is_context_change); 
       }
     }
 
@@ -786,7 +882,7 @@ class RuleEngine {
           console.log("_dbg choice.body_rules: ");
 	  for (var l=0; l < choice.body_rules.length; l++) {
 	    var bodyRule = choice.body_rules[l];
-	    console.log("_dbg position: " + l + " bodyRule name: " + bodyRule.name); 
+            console.log("_dbg position: " + l + " bodyRule name: " + bodyRule.name + " is_context_change: " + bodyRule.is_context_change); 
 	  }
 
         } else {

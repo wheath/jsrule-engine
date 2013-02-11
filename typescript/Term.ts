@@ -94,7 +94,7 @@ class Term {
 
   public getGrounded():any {
     if(is_debug) {
-      console.log("_dbg in getGrounded()");
+      //console.log("_dbg in getGrounded()");
     }
     if(this.isFree()) {
       return this;
@@ -102,12 +102,12 @@ class Term {
     var ret_val = this.grounded;
     if(this.isBoundorAliased()) {
       if(is_debug) {
-        console.log("_dbg aliased or bounded, searching chain...");
-        console.log("_dbg aliased or bounded from: " + ret_val.name);
+        //console.log("_dbg aliased or bounded, searching chain...");
+        //console.log("_dbg aliased or bounded from: " + ret_val.name);
       }
       ret_val = this.grounded.getGrounded();  
       if(is_debug) {
-        console.log("_dbg aliased or bounded to: " + ret_val.name);
+        //console.log("_dbg aliased or bounded to: " + ret_val.name);
       }
     }
 

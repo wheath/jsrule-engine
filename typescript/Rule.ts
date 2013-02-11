@@ -3,7 +3,8 @@ class Rule {
   public args: any[] = []; //args defined in the rule head
   public b_args: any[] = []; //args defined in rule body dynamically
   public rules: Rule[] = [];
-  private non_call_regex =  /=|fail|!|o\(|i\(/;
+  public is_context_change: bool = false;
+  private non_call_regex =  /=|fail|!|o\(|ov\(|i\(/;
 
   public solutions:any[] = [];
   proven: bool;
@@ -43,6 +44,7 @@ class Rule {
 
     rule_copy.proven = this.proven;
     rule_copy.solutions = this.solutions;
+    rule_copy.is_context_change = this.is_context_change;
 
     if(is_debug) {
       console.log("_dbg about to return from Rule.deepcopy");
