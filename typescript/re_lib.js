@@ -127,7 +127,7 @@ var Util = (function () {
     }
     return Util;
 })();
-var is_debug = false;
+var is_debug = true;
 var Types = (function () {
     function Types() { }
     Types.types = [];
