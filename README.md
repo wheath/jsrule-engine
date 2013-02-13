@@ -3,6 +3,14 @@ jsrule-engine
 
 backward chaining object oriented typescript inference rules engine
 
+see the demo of it running in a web page here:
+
+http://jsfiddle.net/xp_prg/ZZrdy/5/
+
+<iframe style="width: 100%; height: 300px" src="http://jsfiddle.net/xp_prg/ZZrdy/5/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+You can also run it on the command line with node.js.
+
 Quickstart:
 
 ```
