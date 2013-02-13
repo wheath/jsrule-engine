@@ -54,3 +54,5 @@ node js modules:
 
 Support:
   come to #prolog and talk to xp_prg (me) or email me at wgheath@gmail.com
+
+  test by Annie
