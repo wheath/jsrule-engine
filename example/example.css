@@ -1,0 +1,117 @@
+html, body{
+ margin: 0;
+ padding: 0;
+ border: 0;
+}
+
+body {
+ font-family:Arial,  sans-serif;
+ line-height:1.5;
+ font-size:16px;
+ background: #fff;
+ padding:5px;
+ color: rgb(255, 255, 255);
+ word-wrap: break-word;
+ -webkit-text-size-adjust: none;
+}
+h1, h2, h3, h4, h5, h6{ font-weight: normal; }
+p img { float: left; margin: 0 10px 5px 0; padding: 0; }
+img { border: 0; max-width: 100%; }
+
+/*  Main Styles */
+body{
+    margin: 0 auto 0 auto;
+    width:95%;
+    background: rgb(240,240,240);
+}
+header{
+    top:0; left:0;
+    height:45px;
+    float: top;
+}
+footer {
+    bottom:0; left:auto;
+    height:48px;
+    background-color:#c27b00;
+    border-top:1px solid #eee;
+    position:fixed;
+    width:95%;
+    margin: 0 auto;
+    z-index:2;
+}
+header, footer{
+    background-color:rgb(222,0,0);
+    padding:0;
+    //position:absolute;
+    //position:relative;
+    z-index:2;
+    font-size:20px;
+    //width:80%;
+    text-align:center;
+    color:#f3f3f3;
+    font-weight:bold;
+    text-shadow:0 -1px 0 rgba(0,0,0,0.5);
+    line-height:45px;
+}
+h1{
+    margin:0;
+    text-transform: uppercase;
+}
+#wrapper {
+    margin: 0 auto 0 auto;
+    //position:absolute;
+    //z-index:1;
+    top:45px; bottom:48px; left:0;
+    width:100%;
+    overflow:auto;
+    color: rgb(255, 255, 255);
+    align:center;
+    }
+#main-content {
+    //position:absolute;
+    //z-index:1;
+    width:100%;
+    padding:0;
+}
+
+.app_button, button {
+  -webkit-border-radius: 20px;
+  border-radius: 20px;
+  display: inline-block;
+  padding: 0 20px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  width: 200px;
+  background:#F7941E;
+  background: -webkit-gradient(linear, 0 0, 0 70%, from(#F7941E), to(#D37F18));
+  background: linear-gradient(#F7941E, #D37F18 70%);
+  border: 1px solid #C97917;
+  font-size: 18px;
+  font-weight: 200;
+  text-shadow: 0 -1px 0 #7E4B0D;
+      height: 40px;
+  line-height: 40px;
+  color:#fff;
+  text-align: center;
+}
+
+#output_div {
+  margin:0 auto 0 auto;
+  width:200px;
+  display: none;
+  color: rgb(0, 0, 0);
+  text-align: center;
+}
+
+#input_div {
+  margin:0 auto 0 auto;
+  width:200px;
+  display: none;
+  color: rgb(0, 0, 0);
+}
+
+#control_div {
+  margin:0 auto 0 auto;
+     width:200px;
+  display: inline;
+}

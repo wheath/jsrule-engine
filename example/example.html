@@ -1,0 +1,43 @@
+<html>
+<title>OO JS Rules Engine Demo</title>
+<body>
+ <header>
+    <h1>OO JS Rules Engine Demo</h1>
+  </header>
+<div id="wrapper">
+    <div id="main-content">
+      <div align="center">
+        <div class="app_button" id="version_button">Version 0.0.1</div>
+      </div>
+
+<div align="center">
+  <div id='output_div'>
+  </div>
+</div>
+
+<div align="center">
+<div id='input_div'>
+<form name='input_form' method="POST" onsubmit="return false;">
+       <input type="radio" name="binary_input" value="yes">Yes<br>
+  <input type="radio" name="binary_input" value="no">No<br>
+  <input type="submit" value="Submit" onclick="Util.handle_binary_input(document);">
+</form>
+</div>
+</div>
+
+<div align="center">
+<div id='control_div'>
+  <form name='control_form' method="POST" onsubmit="return false;">
+    <input type="submit" value="Start Expert System" onclick="run_re();">
+  </form>
+</div>
+</div>
+
+ </div>
+</div>
+</div>
+<footer>
+</footer>
+
+</body>
+    </html>
