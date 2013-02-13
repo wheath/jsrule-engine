@@ -1,43 +1,38 @@
 <html>
-<title>OO JS Rules Engine Demo</title>
+<head>
+    <title>OO JS Rules Engine Demo</title>
+    <link href="example.css" rel="stylesheet" type="text/css" />
+</head>
 <body>
- <header>
     <h1>OO JS Rules Engine Demo</h1>
-  </header>
-<div id="wrapper">
-    <div id="main-content">
-      <div align="center">
-        <div class="app_button" id="version_button">Version 0.0.1</div>
-      </div>
-
-<div align="center">
-  <div id='output_div'>
-  </div>
-</div>
-
-<div align="center">
-<div id='input_div'>
-<form name='input_form' method="POST" onsubmit="return false;">
-       <input type="radio" name="binary_input" value="yes">Yes<br>
-  <input type="radio" name="binary_input" value="no">No<br>
-  <input type="submit" value="Submit" onclick="Util.handle_binary_input(document);">
-</form>
-</div>
-</div>
-
-<div align="center">
-<div id='control_div'>
-  <form name='control_form' method="POST" onsubmit="return false;">
-    <input type="submit" value="Start Expert System" onclick="run_re();">
-  </form>
-</div>
-</div>
-
- </div>
-</div>
-</div>
-<footer>
-</footer>
-
+    <div id="wrapper">
+        <div id="main-content">
+            <div align="center">
+                <div class="app_button" id="version_button">Version 0.0.1</div>
+            </div>
+        <div align="center">
+          <div id='output_div'>
+          </div>
+        </div>
+        <div align="center">
+            <div id='input_div'>
+                <form name='input_form' method="POST" onsubmit="return false;">
+                       <input type="radio" name="binary_input" value="yes">Yes<br>
+                  <input type="radio" name="binary_input" value="no">No<br>
+                  <input type="submit" value="Submit" onclick="Util.handle_binary_input(document);">
+                </form>
+            </div>
+        </div>
+        <div align="center">
+            <div id='control_div'>
+              <form name='control_form' method="POST" onsubmit="return false;">
+                <input type="submit" value="Start Expert System" onclick="run_re();">
+              </form>
+            </div>
+        </div>
+     </div>
+    </div>
+    <script src='../typescript/re_lib.js'> </script>
+    <script src='example_rules.js'></script>
 </body>
-    </html>
+</html>
