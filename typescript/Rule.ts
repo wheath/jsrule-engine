@@ -4,7 +4,7 @@ class Rule {
   public b_args: any[] = []; //args defined in rule body dynamically
   public rules: Rule[] = [];
   public is_context_change: bool = false;
-  private non_call_regex =  /=|fail|!|o\(|ov\(|i\(/;
+  private non_call_regex =  /=|fail|!|o\(|ov\(|i\(|write\(/;
 
   public solutions:any[] = [];
   proven: bool;
@@ -68,7 +68,7 @@ class Rule {
 
   is_query() {
     return !this.rules.length && 
-           this.args.length &&
+           //this.args.length &&
            !this.non_call_regex.test(this.name);
   }
 

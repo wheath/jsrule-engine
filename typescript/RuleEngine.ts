@@ -609,6 +609,9 @@ class RuleEngine {
         console.log("_dbg executing fail");
       }
       is_fail = true;
+    } else if(bodyRule.name.indexOf('write(') > -1) {
+      var r = /^write\((.*)\)/;
+      Util.output(bodyRule.name.match(r)[1]);
     } else if(bodyRule.name.indexOf('o(') > -1) {
       var r = /^o\((.*)\)/;
       Util.output(bodyRule.name.match(r)[1]);
@@ -778,7 +781,8 @@ class RuleEngine {
       this.addBodyRule(bodyRule);
     }
 
-    if(is_debug) {
+    if(is_debug && r.rules.length) {
+      console.log("_dbg # body rules of rule " + r.name + ": " + r.rules.length);
       console.log("_dbg added all body rules of rule: " + bodyRule.name);
       RuleEngine.dump_body_rules();
     }
