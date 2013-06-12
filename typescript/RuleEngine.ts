@@ -711,6 +711,9 @@ class RuleEngine {
   }
 
   public handleBodyRule() {
+    if(is_debug) {
+      console.log("_dbg in handleBodyRule");
+    }
     if(RuleEngine.async_hold) {
       if(is_debug) {
         console.log("_dbg async_hold is true not executing body rule");
@@ -724,6 +727,9 @@ class RuleEngine {
         return;
       }
       if(!bodyRule.is_non_call()) {
+        if(is_debug) {
+          console.log("_dbg bodyRule name: " + bodyRule.name + " is not non_call");
+        }
         var is_body_rule = true;
         var rule_copy = this.prepareToCall(bodyRule, is_body_rule);
         this.fireRule(rule_copy);

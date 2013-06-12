@@ -19,8 +19,11 @@ var re = RuleEngine.getREInst();
 '"'("\\"["]|[^"])*'"' {return 'STRING';}
 "'"('\\'[']|[^'])*"'" {return 'STRING';}
 [0-9]                 {return 'DIGIT';}
+[A-Z_]\w*             {return 'VARIABLE';}
+[a-z_]\w*             {return 'SMALLATOM';}
 [a-z]                 {return 'LOWCASELETTER';}
 [A-Z]                 {return 'UPPERCASELETTER';}
+"=="                  {return 'EQCMP';}
 ","                   {return 'COMMA';}
 "."                   {return 'PERIOD';}
 ":-"                  {return 'NECK';} 
@@ -106,12 +109,23 @@ clause
 	     var body_rule = rules.pop();
              if(is_debug) {
 	       console.log("_dbg adding to header body rule name: " + body_rule.name);
+               for(var i=0;i< body_rule.args.length;i++) {
+	         console.log("  _dbg with arg: " + i + " "+ body_rule.args[i]);
+
+               }
              }
              if(body_rule.name == 'write' && body_rule.args[0]) {
                if(is_debug) {
                  console.log("_dbg write body_rule.args[0]: " + body_rule.args[0]);
                }
                body_rule = new Rule('write(' + body_rule.args[0] + ')');
+             }
+
+             if(body_rule.name == 'i' && body_rule.args[0]) {
+               if(is_debug) {
+                 console.log("_dbg i body_rule.args[0]: " + body_rule.args[0]);
+               }
+               body_rule = new Rule('i(' + body_rule.args[0] + ')');
              }
 	     header.addRule(body_rule);
 	   }
@@ -150,12 +164,23 @@ predicate
         {
          if(is_debug) {
            console.log("here 10");
+           console.log("here 10 adding rule: " + $1 + " with arg: " + args[0].name);
          }
          var r = new Rule($1);
          for(var i=0;i<args.length;i++) {
            r.addArg(args[i]); 
          }
          rules.unshift(r);
+        }
+    | VARIABLE EQCMP string
+        {
+         $$=$1+$2+$3
+         var r = new Rule($$);
+         rules.unshift(r);
+         if(is_debug) {
+           console.log("here 10.1: " + $$);
+         }
+
         }
     ;
 
@@ -176,14 +201,7 @@ termlist
     ;
 
 term
-    : numeral
-        {
-         if(is_debug) {
-           console.log("here 13 1: " + $1);
-         }
-         $$ = $1;
-        }
-    | atom
+    : atom
         {
          if(is_debug) {
            console.log("here 14 1: " + $1);
@@ -191,12 +209,13 @@ term
          $$ = $1;
          args.push($1);
         }
-    | variable
+    | VARIABLE
         {
          if(is_debug) {
            console.log("here 15 1: " + $1);
          }
          $$ = $1;
+         args.push($1);
         }
     ;
 
@@ -211,7 +230,7 @@ query
     ;
 
 atom
-    : smallatom
+    : SMALLATOM
         {
          if(is_debug) {
            console.log("here 18 1: " + $1);
@@ -233,73 +252,3 @@ string
 	}
 
     ;
-
-smallatom
-    : LOWCASELETTER
-        {
-         if(is_debug) {
-           console.log("here 20 1: " + $1);
-         }
-         $$=$1;
-        }
-    | smallatom character
-        {
-         if(is_debug) {
-           console.log("here 21: 1: " + $1 + " 2: " + $2);
-         }
-         $$=$1 + $2;
-        }
-    ;
-
-variable
-    : UPPERCASELETTER
-        {
-         if(is_debug) {
-           console.log("here 22");
-         }
-        }
-    | variable character
-        {
-         if(is_debug) {
-           console.log("here 23");
-         }
-        }
-    ;
-
-numeral
-    : DIGIT
-        {
-         if(is_debug) {
-           console.log("here 24");
-         }
-        }
-    | numeral DIGIT
-        {
-         if(is_debug) {
-           console.log("here 25");
-         }
-        }
-    ;
-
-character
-    : LOWCASELETTER
-        {
-         if(is_debug) {
-           console.log("here 26");
-         }
-        }
-    | UPPERCASELETTER
-        {
-         if(is_debug) {
-           console.log("here 27");
-         }
-        }
-    | DIGIT
-        {
-         if(is_debug) {
-           console.log("here 28");
-         }
-        }
-    ;
-
-
