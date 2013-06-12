@@ -554,14 +554,19 @@ class RuleEngine {
       var arg = RuleEngine.findArg(n[0], header.args);
       if(!arg) {
         if(is_debug) {
+	  console.log("_dbg arg name: "+ n[0] +" not found in header.args");
           console.log("_dbg header.b_args: "+ JSON.stringify(header.b_args) +"\n");
         }
         arg = RuleEngine.findArg(n[0], header.b_args);
       }
 
       if(is_debug) {
-        console.log("_dbg arg name: "+ arg.name +"\n");
-        console.log("_dbg == arg.getGrounded(): "+ arg.getGrounded() +"\n");
+        if(arg) {
+	  console.log("_dbg arg name: "+ arg.name +"\n");
+	  console.log("_dbg == arg.getGrounded(): "+ arg.getGrounded() +"\n");
+        } else {
+	  console.log("_dbg arg name: "+ n[0] +" not found in header.b_args:"+JSON.stringify(header.b_args)+"\n");
+        }
       }
 
       if(arg.getGrounded() != n[1]) {

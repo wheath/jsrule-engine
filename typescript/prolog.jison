@@ -24,6 +24,7 @@ var re = RuleEngine.getREInst();
 [a-z]                 {return 'LOWCASELETTER';}
 [A-Z]                 {return 'UPPERCASELETTER';}
 "=="                  {return 'EQCMP';}
+"="                   {return 'ASSIGN';}
 ","                   {return 'COMMA';}
 "."                   {return 'PERIOD';}
 ":-"                  {return 'NECK';} 
@@ -103,7 +104,14 @@ clause
          if(rules.length > 0) {
 	   header = rules.pop();
            if(is_debug) {
-	     console.log("_dbg header rule name: " + header.name);
+	     console.log("_dbg header rule name: " + header.name + " with arg: " + header.args[0]);
+           }
+
+           for(var i=0;i< header.args.length;i++) {
+             if(is_debug) {
+	       console.log("_dbg header rule name: " + header.name + " adding term: " + header.args[i]);
+             }
+             header.args[i] = new Term(header.args[i]);
            }
 	   while(rules.length > 0) {
 	     var body_rule = rules.pop();
@@ -171,6 +179,7 @@ predicate
            r.addArg(args[i]); 
          }
          rules.unshift(r);
+         args = [];
         }
     | VARIABLE EQCMP string
         {
@@ -179,6 +188,16 @@ predicate
          rules.unshift(r);
          if(is_debug) {
            console.log("here 10.1: " + $$);
+         }
+
+        }
+    | VARIABLE ASSIGN string
+        {
+         $$=$1+$2+$3
+         var r = new Rule($$);
+         rules.unshift(r);
+         if(is_debug) {
+           console.log("here 10.2: " + $$);
          }
 
         }
