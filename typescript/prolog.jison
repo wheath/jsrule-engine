@@ -111,7 +111,7 @@ clause
              if(is_debug) {
 	       console.log("_dbg header rule name: " + header.name + " adding term: " + header.args[i]);
              }
-             header.args[i] = new Term(header.args[i]);
+             //header.args[i] = new Term(header.args[i]);
            }
 	   while(rules.length > 0) {
 	     var body_rule = rules.pop();
@@ -131,9 +131,9 @@ clause
 
              if(body_rule.name == 'i' && body_rule.args[0]) {
                if(is_debug) {
-                 console.log("_dbg i body_rule.args[0]: " + body_rule.args[0]);
+                 console.log("_dbg i body_rule.args[0]: " + body_rule.args[0].name);
                }
-               body_rule = new Rule('i(' + body_rule.args[0] + ')');
+               body_rule = new Rule('i(' + body_rule.args[0].name + ')');
              }
 	     header.addRule(body_rule);
 	   }
@@ -234,7 +234,8 @@ term
            console.log("here 15 1: " + $1);
          }
          $$ = $1;
-         args.push($1);
+         var t_var = new Term($$);
+         args.push(t_var);
         }
     ;
 
