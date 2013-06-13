@@ -28,6 +28,7 @@ var re = RuleEngine.getREInst();
 ","                   {return 'COMMA';}
 "."                   {return 'PERIOD';}
 ":-"                  {return 'NECK';} 
+"!"                   {return 'CUT';} 
 "?-"                  {return 'QUERYSYMBOL';}
 "("                   {return 'LEFTPAREN';}
 ")"                   {return 'RIGHTPAREN';}
@@ -198,6 +199,16 @@ predicate
          rules.unshift(r);
          if(is_debug) {
            console.log("here 10.2: " + $$);
+         }
+
+        }
+    | CUT
+        {
+         $$=$1;
+         var r = new Rule($$);
+         rules.unshift(r);
+         if(is_debug) {
+           console.log("here 10.3: " + $$);
          }
 
         }
