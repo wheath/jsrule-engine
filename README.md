@@ -3,9 +3,15 @@ jsrule-engine
 
 backward chaining object oriented typescript inference rules engine
 
-see the demo of it running in a web page here:
+the rules engine can now interpret/run prolog!
+
+see the first demo of it running in a web page here:
 
 http://jsfiddle.net/xp_prg/ZZrdy/5/
+
+see the improved demo that uses jison to interpret real prolog statements:
+
+http://plnkr.co/edit/HtUx9u9DJZELO996tchN
 
 <iframe style="width: 100%; height: 300px" src="http://jsfiddle.net/xp_prg/ZZrdy/5/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
