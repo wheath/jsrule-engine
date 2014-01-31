@@ -165,6 +165,16 @@ case 8:
                }
                body_rule = new Rule('i(' + body_rule.args[0].name + ')');
              }
+             //iradiobtn(CPUCHOICE, {"Single":"single", "Dual":"dual"})
+             if(body_rule.name == 'iradiobtn' && body_rule.args[0] && body_rule.args[1]) {
+               if(is_debug) {
+                 console.log("_dbg iradiobtn body_rule.args[0].name: " + body_rule.args[0].name + ' body_rule.args[1].name: ' + body_rule.args[1]);
+               }
+               body_rule = new Rule('iradiobtn(' + body_rule.args[0].name + ',' + body_rule.args[1] + ')');
+               console.log("_dbg body_rule.name: " + body_rule.name);
+             }
+
+
 	     header.addRule(body_rule);
 	   }
          }

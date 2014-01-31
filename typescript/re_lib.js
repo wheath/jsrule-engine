@@ -10,6 +10,51 @@ var Util = (function () {
             console.log(s + '\n');
         }
     }
+    Util.inputRadio = function inputRadio(cb, radio_data) {
+        RuleEngine.async_hold = true;
+        if(is_debug) {
+            console.log("_dbg in input");
+            console.log("_dbg rule_firing # b_args: " + RuleEngine.rule_firing.b_args.length);
+        }
+        if(Util.is_in_browser()) {
+            var radio_input_div = document.getElementById("radio_input_div");
+            var btn_string = '';
+            var pre_radio_html = '<input type="radio" name="radio_input" value="';
+            for(var k in radio_data) {
+                if(radio_data.hasOwnProperty(k)) {
+                    console.log('key is: ' + k + ', value is: ' + radio_data[k]);
+                    btn_string += pre_radio_html + radio_data[k] + '">' + k + '<br>';
+                }
+            }
+            console.log("_dbg btn_string: " + btn_string);
+            $('#radio_input_div').html('\
+        <form name="radio_input_form" method="POST" onsubmit="return false;">\
+          ' + btn_string + ' \
+          <input type="submit" value="Submit" onclick="handle_radio_input();">\
+        </form>');
+            radio_input_div.style.display = "inline";
+            RuleEngine.input_cb = cb;
+        } else {
+            var prompt = require('prompt');
+            prompt.start();
+            prompt.get([
+                'input_str'
+            ], function (err, result) {
+                if(err) {
+                    return onErr(err);
+                }
+                if(is_debug) {
+                    console.log('Command-line input received:');
+                    console.log('  input_str: ' + result.input_str);
+                }
+                cb(result.input_str);
+            });
+            function onErr(err) {
+                console.log(err);
+                return 1;
+            }
+        }
+    }
     Util.input = function input(cb) {
         RuleEngine.async_hold = true;
         if(is_debug) {
@@ -56,9 +101,23 @@ var Util = (function () {
         re.addRule(qa_rule_i1);
         qa_bool_rule.addRule(qa_rule_i1);
     }
+    Util.handle_radio_input = function handle_radio_input(document) {
+        console.log("_dbg in handle_radio_input");
+        var oRadio = document.forms[1].elements['radio_input'];
+        var radio_val = '';
+        for(var i = 0; i < oRadio.length; i++) {
+            if(oRadio[i].checked) {
+                radio_val = oRadio[i].value;
+            }
+        }
+        console.log("_dbg radio_val: " + radio_val);
+        var input_div = document.getElementById("radio_input_div");
+        input_div.style.display = "none";
+        RuleEngine.input_cb(radio_val);
+    }
     Util.handle_binary_input = function handle_binary_input(document) {
         console.log("_dbg in handle_binary_input");
-        var oRadio = document.forms[0].elements['binary_input'];
+        var oRadio = document.forms[1].elements['binary_input'];
         var radio_val = '';
         for(var i = 0; i < oRadio.length; i++) {
             if(oRadio[i].checked) {
@@ -249,7 +308,7 @@ var Rule = (function () {
         this.b_args = [];
         this.rules = [];
         this.is_context_change = false;
-        this.non_call_regex = /=|fail|!|o\(|ov\(|i\(/;
+        this.non_call_regex = /=|fail|!|o\(|ov\(|i\(|write\(|iradiobtn\(/;
         this.solutions = [];
         this.name = name;
         this.proven = false;
@@ -293,7 +352,7 @@ var Rule = (function () {
         this.rules.push(rule);
     };
     Rule.prototype.is_query = function () {
-        return !this.rules.length && this.args.length && !this.non_call_regex.test(this.name);
+        return !this.rules.length && !this.non_call_regex.test(this.name);
     };
     Rule.prototype.is_non_call = function () {
         return !this.rules.length && !this.args.length && this.non_call_regex.test(this.name);
@@ -712,8 +771,15 @@ var RuleEngine = (function () {
         if(is_debug) {
             console.log("_dbg bodyRule.name: " + bodyRule.name);
         }
-        var r = /^i\((.*)\)/;
-        var arg_name = bodyRule.name.match(r)[1];
+        if(bodyRule.name.indexOf('i(') > -1) {
+            var r = /^i\((.*)\)/;
+            var arg_name = bodyRule.name.match(r)[1];
+        }
+        if(bodyRule.name.indexOf('iradiobtn(') > -1) {
+            var r = /^iradiobtn\((.*)\)/;
+            var radio_exp = bodyRule.name.match(r)[1];
+            var arg_name = radio_exp.substr(0, radio_exp.indexOf(','));
+        }
         console.log("\n");
         var arg = RuleEngine.findArg(arg_name, header.args);
         if(!arg) {
@@ -772,13 +838,18 @@ var RuleEngine = (function () {
             var arg = RuleEngine.findArg(n[0], header.args);
             if(!arg) {
                 if(is_debug) {
+                    console.log("_dbg arg name: " + n[0] + " not found in header.args");
                     console.log("_dbg header.b_args: " + JSON.stringify(header.b_args) + "\n");
                 }
                 arg = RuleEngine.findArg(n[0], header.b_args);
             }
             if(is_debug) {
-                console.log("_dbg arg name: " + arg.name + "\n");
-                console.log("_dbg == arg.getGrounded(): " + arg.getGrounded() + "\n");
+                if(arg) {
+                    console.log("_dbg arg name: " + arg.name + "\n");
+                    console.log("_dbg == arg.getGrounded(): " + arg.getGrounded() + "\n");
+                } else {
+                    console.log("_dbg arg name: " + n[0] + " not found in header.b_args:" + JSON.stringify(header.b_args) + "\n");
+                }
             }
             if(arg.getGrounded() != n[1]) {
                 is_fail = true;
@@ -817,32 +888,50 @@ var RuleEngine = (function () {
                         }
                         is_fail = true;
                     } else {
-                        if(bodyRule.name.indexOf('o(') > -1) {
-                            var r = /^o\((.*)\)/;
+                        if(bodyRule.name.indexOf('write(') > -1) {
+                            var r = /^write\((.*)\)/;
                             Util.output(bodyRule.name.match(r)[1]);
                         } else {
-                            if(bodyRule.name.indexOf('i(') > -1) {
-                                var r = /^i\((.*)\)/;
-                                var arg_name = bodyRule.name.match(r)[1];
-                                if(is_debug) {
-                                    console.log("_dbg input into varible: " + arg_name);
-                                }
-                                Util.input(this.handleAsyncInput);
+                            if(bodyRule.name.indexOf('o(') > -1) {
+                                var r = /^o\((.*)\)/;
+                                Util.output(bodyRule.name.match(r)[1]);
                             } else {
-                                if(bodyRule.name.indexOf('ov(') > -1) {
-                                    if(is_debug) {
-                                        console.log("_dbg in ov body rule");
-                                    }
-                                    var r = /^ov\((.*)\)/;
+                                if(bodyRule.name.indexOf('i(') > -1) {
+                                    var r = /^i\((.*)\)/;
                                     var arg_name = bodyRule.name.match(r)[1];
                                     if(is_debug) {
-                                        console.log("_dbg arg_name: " + arg_name);
+                                        console.log("_dbg input into varible: " + arg_name);
                                     }
-                                    var arg = RuleEngine.findArg(arg_name, header.args);
-                                    if(!arg) {
-                                        arg = RuleEngine.findArg(arg_name, header.b_args);
+                                    Util.input(this.handleAsyncInput);
+                                } else {
+                                    if(bodyRule.name.indexOf('iradiobtn(') > -1) {
+                                        var r = /^iradiobtn\((.*)\)/;
+                                        var radio_exp = bodyRule.name.match(r)[1];
+                                        var arg_name = radio_exp.substr(0, radio_exp.indexOf(','));
+                                        var radio_info = radio_exp.substr(radio_exp.indexOf(',') + 1, radio_exp.length);
+                                        if(is_debug) {
+                                            console.log("_dbg input radio button into variable: " + arg_name);
+                                            console.log("_dbg input radio button info: " + radio_info);
+                                        }
+                                        var radio_data = JSON.parse(radio_info);
+                                        Util.inputRadio(this.handleAsyncInput, radio_data);
+                                    } else {
+                                        if(bodyRule.name.indexOf('ov(') > -1) {
+                                            if(is_debug) {
+                                                console.log("_dbg in ov body rule");
+                                            }
+                                            var r = /^ov\((.*)\)/;
+                                            var arg_name = bodyRule.name.match(r)[1];
+                                            if(is_debug) {
+                                                console.log("_dbg arg_name: " + arg_name);
+                                            }
+                                            var arg = RuleEngine.findArg(arg_name, header.args);
+                                            if(!arg) {
+                                                arg = RuleEngine.findArg(arg_name, header.b_args);
+                                            }
+                                            Util.output(arg.getGrounded());
+                                        }
                                     }
-                                    Util.output(arg.getGrounded());
                                 }
                             }
                         }
@@ -911,6 +1000,9 @@ var RuleEngine = (function () {
         }
     };
     RuleEngine.prototype.handleBodyRule = function () {
+        if(is_debug) {
+            console.log("_dbg in handleBodyRule");
+        }
         if(RuleEngine.async_hold) {
             if(is_debug) {
                 console.log("_dbg async_hold is true not executing body rule");
@@ -923,6 +1015,9 @@ var RuleEngine = (function () {
             return;
         }
         if(!bodyRule.is_non_call()) {
+            if(is_debug) {
+                console.log("_dbg bodyRule name: " + bodyRule.name + " is not non_call");
+            }
             var is_body_rule = true;
             var rule_copy = this.prepareToCall(bodyRule, is_body_rule);
             this.fireRule(rule_copy);
@@ -962,7 +1057,8 @@ var RuleEngine = (function () {
             var bodyRule = r.rules[l];
             this.addBodyRule(bodyRule);
         }
-        if(is_debug) {
+        if(is_debug && r.rules.length) {
+            console.log("_dbg # body rules of rule " + r.name + ": " + r.rules.length);
             console.log("_dbg added all body rules of rule: " + bodyRule.name);
             RuleEngine.dump_body_rules();
         }
