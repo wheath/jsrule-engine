@@ -4,7 +4,7 @@ class Rule {
   public b_args: any[] = []; //args defined in rule body dynamically
   public rules: Rule[] = [];
   public is_context_change: bool = false;
-  private non_call_regex =  /=|fail|!|o\(|ov\(|i\(|write\(/;
+  private non_call_regex =  /=|fail|!|o\(|ov\(|i\(|write\(|iradiobtn\(/;
 
   public solutions:any[] = [];
   proven: bool;
