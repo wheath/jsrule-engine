@@ -3,16 +3,43 @@
 <head>
 <meta charset="utf-8"/>
 <link href="css/master.css" rel="stylesheet"/>
-<!-- script src="js/jquery-1.8.3.min.js" -->
-<!-- /script -->
+<script src="js/jquery-1.8.3.min.js">
+</script>
 <script src="js/expert_system_combined.js">
 </script>
 
 <script type="text/javascript">                                         
 
+$(function() {
+  $('input[type="radio"][name="binary_input"]').click(function () { 
+    $closestForm = $(this).parents('form');  
+    $closestForm.submit();
+    }
+  );
+});
+
+function handle_radio_input() {
+  console.log("_dbg in handle_radio_input");
+  var oRadio = document.forms[0].elements['radio_input'];
+  var radio_val = '';
+ 
+   for(var i = 0; i < oRadio.length; i++)
+   {
+      if(oRadio[i].checked)
+      {
+         radio_val = oRadio[i].value;
+      }
+   }
+
+   console.log("_dbg radio_val: " + radio_val);
+   var radio_input_div = document.getElementById("radio_input_div");
+   radio_input_div.style.display = "none";
+   RuleEngine.input_cb(radio_val);
+}
+
 function handle_binary_input() {
   console.log("_dbg in handle_binary_input");
-  var oRadio = document.forms[0].elements['binary_input'];
+  var oRadio = document.forms[1].elements['binary_input'];
   var radio_val = '';
  
    for(var i = 0; i < oRadio.length; i++)
