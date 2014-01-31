@@ -11,7 +11,7 @@ http://jsfiddle.net/xp_prg/ZZrdy/5/
 
 see the improved demo that uses jison to interpret real prolog statements:
 
-http://plnkr.co/edit/HtUx9u9DJZELO996tchN
+http://plnkr.co/edit/namb3X1j6ZNBgVRRmj5u?p=preview
 
 <iframe style="width: 100%; height: 300px" src="http://jsfiddle.net/xp_prg/ZZrdy/5/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
