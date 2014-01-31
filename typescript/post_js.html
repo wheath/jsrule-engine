@@ -7,6 +7,14 @@
 <div id='output_div'>
 
 </div>
+<div id='radio_input_div'>
+<form name='radio_input_form' method="POST" onsubmit="return false;">
+  <input type="radio" name="radio_input" value="yes">Yes<br>
+  <input type="radio" name="radio_input" value="no">No
+  <input type="submit" value="Submit" onclick="handle_radio_input();">
+</form>
+
+</div>
 <div id='input_div'>
 <form name='input_form' method="POST" onsubmit="return false;">
   <input type="radio" name="binary_input" value="yes">Yes<br>
