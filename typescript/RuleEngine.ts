@@ -10,6 +10,9 @@ class RuleEngine {
   private static rules : Rule[] = [];
   private static choices : any[] = [];
   private static body_rules : any[] = [];
+  public static no_solutions_found_txt: string = '';  
+  public static gnd_val_only: bool = false;
+  public static use_continue_btn: bool = false;
   public static rule_firing: any;
   public static body_rule_firing: any;
   public static async_hold: bool = false;
@@ -481,8 +484,16 @@ class RuleEngine {
       console.log("_dbg bodyRule.name: " + bodyRule.name);
     }
 
-    var r = /^i\((.*)\)/;
-    var arg_name = bodyRule.name.match(r)[1];
+    if(bodyRule.name.indexOf('i(') > -1) { 
+      var r = /^i\((.*)\)/;
+      var arg_name = bodyRule.name.match(r)[1];
+    } 
+
+    if(bodyRule.name.indexOf('iradiobtn(') > -1) {
+      var r = /^iradiobtn\((.*)\)/;
+      var radio_exp = bodyRule.name.match(r)[1];
+      var arg_name = radio_exp.substr(0, radio_exp.indexOf(','));
+    }
     
 
     console.log("\n");
@@ -628,6 +639,20 @@ class RuleEngine {
       }
 
       Util.input(this.handleAsyncInput);
+    } else if(bodyRule.name.indexOf('iradiobtn(') > -1) {
+      var r = /^iradiobtn\((.*)\)/;
+      var radio_exp = bodyRule.name.match(r)[1];
+      var arg_name = radio_exp.substr(0, radio_exp.indexOf(','));
+      var radio_info = radio_exp.substr(radio_exp.indexOf(',')+1, radio_exp.length);
+      if(is_debug) {
+        console.log("_dbg input radio button into variable: " + arg_name);
+        console.log("_dbg input radio button info: " + radio_info);
+      }
+
+      var radio_data = JSON.parse(radio_info);
+
+      Util.inputRadio(this.handleAsyncInput, radio_data);
+      //Util.input(this.handleAsyncInput);
     } else if(bodyRule.name.indexOf('ov(') > -1) {
       if(is_debug) {
         console.log("_dbg in ov body rule");
@@ -952,13 +977,23 @@ class RuleEngine {
     var q = RuleEngine.base_query;
     var output_ar = [];
     if(this.isQuerySolved(q.args)) { 
-      output_ar.push('Query: ' + q.name + ' was solved, solutions are: \n');
+       if(RuleEngine.gnd_val_only) {
+         for(var i = 0; i < q.args.length; i++) {
+           output_ar.push(q.args[i].getGrounded());
+         }
+       } else {
+         output_ar.push('Query: ' + q.name + ' was solved, solutions are: \n');
 
-      for(var i=0; i < q.args.length; i++) {
-        output_ar.push('arg name: ' + q.args[i].name + ' ground val: ' + q.args[i].getGrounded() + '\n');
-      }   
+         for(var i=0; i < q.args.length; i++) {
+          output_ar.push('arg name: ' + q.args[i].name + ' ground val: ' + q.args[i].getGrounded() + '\n');
+         }   
+       }
     } else {
-      output_ar.push('Query: ' + q.name + ' was not solved\n');
+      if(RuleEngine.no_solutions_found_txt != '') {
+        output_ar.push(RuleEngine.no_solutions_found_txt);
+      } else {
+        output_ar.push('Query: ' + q.name + ' was not solved\n');
+      }
     }
 
     if(RuleEngine.choices.length >0) {

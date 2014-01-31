@@ -16,6 +16,90 @@ class Util {
     }
   }
 
+  public static inputRadio(cb: any, radio_data) {
+    //var re = RuleEngine.getREInst();
+    RuleEngine.async_hold = true;
+    if(is_debug) {
+      console.log("_dbg in input");
+      console.log("_dbg rule_firing # b_args: " + RuleEngine.rule_firing.b_args.length);
+      //console.log("_dbg RuleEngine.body_rule_firing.name: " + RuleEngine.body_rule_firing.name);
+    }
+    if(Util.is_in_browser()) {
+      var radio_input_div = document.getElementById("radio_input_div");
+
+      var btn_string = '';
+      var pre_radio_html = '<input type="radio" name="radio_input" value="';
+      for(var k in radio_data) {
+        if(radio_data.hasOwnProperty(k)) {
+          console.log('key is: ' + k + ', value is: ' + radio_data[k]);
+          btn_string += pre_radio_html + radio_data[k] + '">' + k + '<br>';
+        }
+      }
+
+      console.log("_dbg btn_string: " + btn_string);
+      if(RuleEngine.use_continue_btn == true) {
+	$('#radio_input_div').html('\
+	  <form id="radio_input_form" method="POST" onsubmit="return false;">\
+	    ' + btn_string + ' \
+	    <input type="submit" value="Submit" onclick="Util.handle_radio_input();">\
+	  </form>');
+      } else {
+	$('#radio_input_div').html('\
+	  <form id="radio_input_form" method="POST" onsubmit="Util.handle_radio_input();return false;">\
+	    ' + btn_string + ' \
+	  </form>');
+	$('input[type="radio"][name="radio_input"]').click(function () { $closestForm = $(this).parents('form');  $closestForm.submit();});
+
+      }
+
+
+      //document.forms['radio_input_form'].parentNode.removeChild(document.forms['radio_input_form']);
+
+      /*
+      for(var i = 0; i < radio_btns.length; i++) {
+        radio_btns[i].parentNode.removeChild(radio_btns[i]);
+      } */
+
+
+      radio_input_div.style.display = "inline";
+      RuleEngine.input_cb = cb;
+      //var input_str = window.prompt("Enter input", "Enter yes or no");
+      //cb(input_str);
+    } else {
+      var prompt = require('prompt');
+      prompt.start();
+
+      prompt.get(['input_str'], function (err, result) {
+          if (err) { return onErr(err); }
+              if(is_debug) {
+                console.log('Command-line input received:');
+                console.log('  input_str: ' + result.input_str);
+              } 
+              //console.log("_dbg after RuleEngine.body_rule_firing.name: " + RuleEngine.body_rule_firing.name);
+              cb(result.input_str);
+              //re.handleAsyncInput(result.input_str);
+              //console.log('  Email: ' + result.email);
+          });
+
+      function onErr(err) {
+        console.log(err);
+          return 1;
+            }
+
+
+
+      /*
+      var fs = require('fs');
+      console.log("\npress ctrl-d ctrl-d when done with input...\n");
+      var input_str = fs.readFileSync('/dev/stdin', 'utf-8');
+      */
+
+    }
+
+    //re.handleAsyncInput(input_str);
+    //return input_str;
+  }
+
   public static input(cb: any) {
     //var re = RuleEngine.getREInst();
     RuleEngine.async_hold = true;
@@ -83,24 +167,27 @@ class Util {
     qa_bool_rule.addRule(qa_rule_i1);
   }
 
+  public static handle_radio_input(document) {
+    console.log("_dbg in handle_radio_input");
+    var radio_val = $("#radio_input_form input[type='radio']:checked").val();
+    console.log("_dbg radio_val: " + radio_val);
+    $("#radio_input_div").hide();
+    $("input:radio[name='radio_input']").each(function () { 
+      $(this).prop('checked', false); 
+    });
+
+    RuleEngine.input_cb(radio_val);
+  }
+
 
   public static handle_binary_input(document) {
     console.log("_dbg in handle_binary_input");
-    var oRadio = document.forms[0].elements['binary_input'];
-    var radio_val = '';
+    var oRadio = document.forms[1].elements['binary_input'];
+    var radio_val = $("#input_form input[type='radio']:checked").val();
    
-     for(var i = 0; i < oRadio.length; i++)
-     {
-	if(oRadio[i].checked)
-	{
-	   radio_val = oRadio[i].value;
-	}
-     }
-
-     console.log("_dbg radio_val: " + radio_val);
-     var input_div = document.getElementById("input_div");
-     input_div.style.display = "none";
-     RuleEngine.input_cb(radio_val);
+    console.log("_dbg radio_val: " + radio_val);
+    $("#input_div").hide();
+    RuleEngine.input_cb(radio_val);
   }
 
   //gen_rules_from_qa table
