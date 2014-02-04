@@ -583,6 +583,9 @@ class RuleEngine {
       if(arg.getGrounded() != n[1]) {
         is_fail = true;
       }
+    } else if(bodyRule.name.indexOf('write(') > -1) {
+      var r = /^write\((.*)\)/;
+      Util.output(bodyRule.name.match(r)[1]);
     } else if(bodyRule.name.indexOf('=') > -1) {
       //TODO: this only allows assignment X=1 not 1=X
       var n = bodyRule.name.split('=');
@@ -625,9 +628,6 @@ class RuleEngine {
         console.log("_dbg executing fail");
       }
       is_fail = true;
-    } else if(bodyRule.name.indexOf('write(') > -1) {
-      var r = /^write\((.*)\)/;
-      Util.output(bodyRule.name.match(r)[1]);
     } else if(bodyRule.name.indexOf('o(') > -1) {
       var r = /^o\((.*)\)/;
       Util.output(bodyRule.name.match(r)[1]);
