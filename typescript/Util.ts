@@ -28,11 +28,13 @@ class Util {
       var radio_input_div = document.getElementById("radio_input_div");
 
       var btn_string = '';
-      var pre_radio_html = '<input type="radio" name="radio_input" value="';
+      var radio_btn_cnt = 0;
       for(var k in radio_data) {
+        radio_btn_cnt++;
         if(radio_data.hasOwnProperty(k)) {
           console.log('key is: ' + k + ', value is: ' + radio_data[k]);
-          btn_string += pre_radio_html + radio_data[k] + '">' + k + '<br>';
+          btn_string += '<label for="radB' + radio_btn_cnt + '" class="txtradbttn"><input id="radB' + radio_btn_cnt + '" type="radio" class="processor' + radio_btn_cnt + '" name="radio_input" value="' + radio_data[k] + '">'+k+'</label>';
+                    					
         }
       }
 
