@@ -11,8 +11,6 @@ human(socrates).
 /// <reference path="Atom.ts"/>
 /// <reference path="Rule.ts"/>
 /// <reference path="Term.ts"/>
-/// <reference path="Fact.ts"/>
-/// <reference path="Query.ts"/>
 
 
 var re = new RuleEngine();

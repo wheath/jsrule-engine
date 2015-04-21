@@ -3,11 +3,11 @@ class Rule {
   public args: any[] = []; //args defined in the rule head
   public b_args: any[] = []; //args defined in rule body dynamically
   public rules: Rule[] = [];
-  public is_context_change: bool = false;
+  public is_context_change: boolean = false;
   private non_call_regex =  /=|fail|!|o\(|ov\(|i\(|write\(|iradiobtn\(/;
 
   public solutions:any[] = [];
-  proven: bool;
+  proven: boolean;
   
   constructor(name: string) {
     this.name = name;

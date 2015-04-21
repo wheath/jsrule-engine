@@ -1,3 +1,4 @@
+/// <reference path="jquery.d.ts" />
 declare var require: any;
 
 
@@ -50,7 +51,7 @@ class Util {
 	  <form id="radio_input_form" method="POST" onsubmit="Util.handle_radio_input();return false;">\
 	    ' + btn_string + ' \
 	  </form>');
-	$('input[type="radio"][name="radio_input"]').click(function () { $closestForm = $(this).parents('form');  $closestForm.submit();});
+	$('input[type="radio"][name="radio_input"]').click(function () { var closestForm = $(this).parents('form');  closestForm.submit();});
 
       }
 
@@ -192,12 +193,23 @@ class Util {
     RuleEngine.input_cb(radio_val);
   }
 
+  //utility function to help with disjunction approximation via backtracking
+
+  public static create_rule_header(rule_name, header_args) {
+    var new_rule = new Rule(rule_name);
+    for(var i=0; i < header_args.length;i++) {
+      new_rule.addArg(header_args[i]);
+    }
+
+    return new_rule;
+  }
+
   //gen_rules_from_qa table
 
   public static create_rule_from_qa_table(input_rule_name, input_rulehdr_args,  
 				   qa_t, call_rule_name) {
 
-    var qa_input_rule = create_rule_header(input_rule_name, input_rulehdr_args);
+    var qa_input_rule = this.create_rule_header(input_rule_name, input_rulehdr_args);
     var call_rule_args = []; 
     for(var i=0; i < qa_t.length; i++) {
       var qa_info = qa_t[i];
@@ -215,7 +227,7 @@ class Util {
       call_rule_args.push(new Term(input_rulehdr_args[i].name));
     }
 
-    var call_rule = create_rule_header(call_rule_name, call_rule_args);
+    var call_rule = this.create_rule_header(call_rule_name, call_rule_args);
     //console.log("_dbg call_rule_args.length: " + call_rule_args.length);
     //console.log("_dbg last call_rule_args name: " + call_rule_args[call_rule_args.length-1].name);
     qa_input_rule.rules.push(call_rule);
@@ -229,7 +241,7 @@ class Util {
   public static gen_rules_from_truth_table(rule_name, header_args, tt) {
     var generated_rules = [];
     for(var i=0; i < tt.length; i++) {
-      var rule = create_rule_header(rule_name, header_args);
+      var rule = this.create_rule_header(rule_name, header_args);
       var body_tt_row = tt[i];
       for(var j=0; j < body_tt_row.length; j++) {
 	if(body_tt_row[j] === undefined) {
@@ -257,15 +269,5 @@ class Util {
 
 
 
-  //utility function to help with disjunction approximation via backtracking
-
-  public static create_rule_header(rule_name, header_args) {
-    var new_rule = new Rule(rule_name);
-    for(var i=0; i < header_args.length;i++) {
-      new_rule.addArg(header_args[i]);
-    }
-
-    return new_rule;
-  }
 
 }

@@ -19,7 +19,7 @@ class Term {
     return term_copy;
   }
 
-  public isBoundorAliased():bool {
+  public isBoundorAliased():boolean {
      var ret_val = false;
      /*
      console.log("_dbg in isBoundorAliased");
@@ -36,7 +36,7 @@ class Term {
      return ret_val;
   }
 
-  public isFree():bool {
+  public isFree():boolean {
     if(this.grounded == this) {
       return true;
     } else {
@@ -44,7 +44,7 @@ class Term {
     }
   }
 
-  public isGrounded():bool {
+  public isGrounded():boolean {
     var is_grounded = true;
     if(this.grounded == this) {
       is_grounded = false;
@@ -58,7 +58,7 @@ class Term {
     this.grounded = this;
   }
 
-  public unify(t: any):bool {
+  public unify(t: any):boolean {
     if(is_debug) {
       console.log("_dbg in unify");
       console.log("_dbg this.name: " + this.name);
